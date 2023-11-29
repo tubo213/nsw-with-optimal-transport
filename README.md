@@ -66,3 +66,7 @@ The following command exports the experiment results from wandb to the local dir
 ```bash
 rye run python tools/export_results.py --user_name {your wandb user name}
 ```
+
+# References
+
+- Saito, Y., & Joachims, T. (2022, August). Fair Ranking as Fair Division: Impact-Based Individual Fairness in Ranking. In Proceedings of the 28th ACM SIGKDD Conference on Knowledge Discovery and Data Mining (pp. 1514-1524).
