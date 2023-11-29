@@ -14,7 +14,8 @@ from src.optimizer.common import get_optimizer
 @hydra.main(config_path="conf", config_name="main", version_base="1.2")
 def main(cfg: Config):
     wandb_config = omegaconf.OmegaConf.to_container(cfg, resolve=True, throw_on_missing=True)
-    wandb.init(project="nsw-with-optimal-transport", name=cfg.exp_name, config=wandb_config)  # type: ignore
+    project_name = "nsw-with-optimal-transport"
+    wandb.init(project=project_name, name=cfg.exp_name, config=wandb_config)  # type: ignore
 
     seed_everything(cfg.seed)
     generator_cfg = cfg.generator
