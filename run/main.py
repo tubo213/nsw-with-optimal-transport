@@ -1,4 +1,5 @@
 import time
+from pathlib import Path
 
 import hydra
 import omegaconf
@@ -9,7 +10,7 @@ from src.conf import Config
 from src.evaluator import evaluate_pi
 from src.generator import exam_func, synthesize_rel_mat
 from src.optimizer.common import get_optimizer
-from pathlib import Path
+
 
 @hydra.main(config_path="conf", config_name="main", version_base="1.2")
 def main(cfg: Config):
