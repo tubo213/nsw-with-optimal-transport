@@ -1,4 +1,4 @@
-from time import time
+import time
 
 import hydra
 import omegaconf
@@ -32,10 +32,12 @@ def main(cfg: Config):
 
     # solve
     optimizer = get_optimizer(cfg.optimizer.name, cfg.optimizer.params)
+    t0 = time.perf_counter()
     pi = optimizer.solve(rel_mat_obs, expo)
-    t0 = time()
+    exec_time = time.perf_counter() - t0
+
+    # evaluate
     result = evaluate_pi(pi, rel_mat_true, expo)
-    exec_time = time() - t0
     result.exec_time = exec_time
     print(result)
 
