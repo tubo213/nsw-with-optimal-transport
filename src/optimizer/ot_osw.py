@@ -69,6 +69,7 @@ def compute_pi_ot_nsw(
     expo: np.ndarray,
     high: np.ndarray,
     alpha: float = 0.0,
+    lr: float = 0.01,
     ot_n_iter: int = 30,
     last_ot_n_iter: int = 100,
     tol: float = 1e-6,
@@ -81,6 +82,7 @@ def compute_pi_ot_nsw(
         expo (np.ndarray): exposure matrix. (n_rank, 1)
         high (np.ndarray): high matrix. (n_doc, )
         alpha (float, optional): alpha. Defaults to 0.0.
+        lr (float, optional): learning rate. Defaults to 0.01.
         ot_n_iter (int, optional): number of iteration for ot. Defaults to 30.
         last_ot_n_iter (int, optional): number of iteration for ot. Defaults to 100.
         tol (float, optional): tolerance. Defaults to 1e-6.
@@ -100,7 +102,7 @@ def compute_pi_ot_nsw(
     # optimization
     C = nn.Parameter(torch.rand(n_query, n_doc, n_rank).to(device))
     a = nn.Parameter(torch.ones(n_query, n_doc, 1).to(device))
-    optimier = torch.optim.Adam([C, a], lr=0.01)
+    optimier = torch.optim.Adam([C, a], lr=lr)
     use_amp = True if device == "cuda" else False
     scaler = GradScaler(enabled=use_amp)
     prev_loss = 1e7
@@ -142,12 +144,14 @@ class OTNSWOptimizer(BaseOptimizer):
     def __init__(
         self,
         alpha: float = 0.0,
+        lr: float = 0.01,
         ot_n_iter: int = 50,
         last_ot_n_iter: int = 100,
         tol: float = 1e-6,
         device: str = "cpu",
     ):
         self.alpha = alpha
+        self.lr = lr
         self.ot_n_iter = ot_n_iter
         self.last_ot_n_iter = last_ot_n_iter
         self.tol = tol
@@ -161,6 +165,7 @@ class OTNSWOptimizer(BaseOptimizer):
             expo,
             high,
             self.alpha,
+            self.lr,
             self.ot_n_iter,
             self.last_ot_n_iter,
             self.tol,
@@ -174,6 +179,7 @@ class ClusteredOTNSWOptimizer(BaseClusteredOptimizer):
         n_doc_cluster: int,
         n_query_cluster: int,
         alpha: float = 0.0,
+        lr: float = 0.01,
         ot_n_iter: int = 50,
         last_ot_n_iter: int = 100,
         tol: float = 1e-6,
@@ -182,6 +188,7 @@ class ClusteredOTNSWOptimizer(BaseClusteredOptimizer):
     ):
         super().__init__(n_doc_cluster, n_query_cluster, random_state)
         self.alpha = alpha
+        self.lr = lr
         self.ot_n_iter = ot_n_iter
         self.last_ot_n_iter = last_ot_n_iter
         self.tol = tol
@@ -193,6 +200,7 @@ class ClusteredOTNSWOptimizer(BaseClusteredOptimizer):
             expo,
             high,
             self.alpha,
+            self.lr,
             self.ot_n_iter,
             self.last_ot_n_iter,
             self.tol,
