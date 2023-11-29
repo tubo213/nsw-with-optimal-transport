@@ -17,6 +17,7 @@ def main(cfg: Config):
     project_name = "nsw-with-optimal-transport"
     wandb.init(project=project_name, name=cfg.exp_name, config=wandb_config)  # type: ignore
 
+    # generate data
     seed_everything(cfg.seed)
     generator_cfg = cfg.generator
     rel_mat_true, rel_mat_obs = synthesize_rel_mat(
@@ -29,16 +30,16 @@ def main(cfg: Config):
     )
     expo = exam_func(generator_cfg.K, generator_cfg.shape)
 
+    # solve
     optimizer = get_optimizer(cfg.optimizer.name, cfg.optimizer.params)
     pi = optimizer.solve(rel_mat_obs, expo)
-
     t0 = time()
     result = evaluate_pi(pi, rel_mat_true, expo)
     exec_time = time() - t0
     result.exec_time = exec_time
-
     print(result)
 
+    # log
     wandb.log(
         {
             "user_util": result.user_util,
