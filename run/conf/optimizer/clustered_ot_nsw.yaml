@@ -1,0 +1,9 @@
+name: clustered_ot_nsw
+params:
+  n_doc_cluster: ${generator.K}
+  n_query_cluster: null
+  alpha: 0.0
+  ot_n_iter: 30
+  last_ot_n_iter: 50
+  tol: 0.001
+  device: cuda

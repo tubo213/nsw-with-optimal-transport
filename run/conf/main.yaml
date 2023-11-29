@@ -1,0 +1,26 @@
+# ---------- Overriding hydra default configs ----------
+hydra:
+  job:
+    name: main
+    chdir: true
+  run:
+    dir: output/${exp_name}/single
+  sweep:
+    dir: output/${exp_name}
+    subdir: run${hydra.job.num}
+
+defaults:
+  - _self_
+  - optimizer: nsw
+
+exp_name: dummy
+seed: 0
+# ---------- Generator ----------
+generator:
+  n_query: 100
+  n_doc: 50
+  lam: 1.0
+  flip_ratio: 0.3
+  noise: 0.05
+  K: 10
+  shape: inv

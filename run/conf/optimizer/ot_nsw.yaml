@@ -1,0 +1,7 @@
+name: ot_nsw
+params:
+  alpha: 0.0
+  ot_n_iter: 30
+  last_ot_n_iter: 50
+  tol: 0.001
+  device: cuda
