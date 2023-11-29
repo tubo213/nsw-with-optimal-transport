@@ -135,7 +135,7 @@ def compute_pi_ot_nsw(
             pi = sinkhorn(C, a_hat, n_iter=last_ot_n_iter)
             pi /= pi.sum(dim=1, keepdim=True)
 
-    return pi.cpu().numpy() / high[None, :, None]
+    return pi.cpu().numpy()
 
 
 class OTNSWOptimizer(BaseOptimizer):

@@ -51,6 +51,7 @@ class BaseClusteredOptimizer(BaseOptimizer):
         """
         rel_mat, high, item_cluster_ids, query_cluster_ids = self._clustering(rel_mat)
         pi = self._solve(rel_mat, expo, high)
+        pi = pi / high[None, :, None]
 
         return pi[query_cluster_ids][:, item_cluster_ids]
 
