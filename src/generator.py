@@ -1,7 +1,7 @@
 import numpy as np
 from sklearn.utils import check_random_state
 
-
+# ref: https://github.com/usaito/kdd2022-fair-ranking-nsw
 def synthesize_rel_mat(
     n_query: int,
     n_doc: int,
