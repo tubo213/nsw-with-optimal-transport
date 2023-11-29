@@ -9,13 +9,15 @@ from src.conf import Config
 from src.evaluator import evaluate_pi
 from src.generator import exam_func, synthesize_rel_mat
 from src.optimizer.common import get_optimizer
-
+from pathlib import Path
 
 @hydra.main(config_path="conf", config_name="main", version_base="1.2")
 def main(cfg: Config):
     wandb_config = omegaconf.OmegaConf.to_container(cfg, resolve=True, throw_on_missing=True)
     project_name = "nsw-with-optimal-transport"
-    wandb.init(project=project_name, name=cfg.exp_name, config=wandb_config)  # type: ignore
+    current_dir_name = Path.cwd().name
+    exp_run = f"{cfg.exp_name}_{current_dir_name}"
+    wandb.init(project=project_name, name=exp_run, config=wandb_config)  # type: ignore
 
     # generate data
     seed_everything(cfg.seed)
@@ -51,6 +53,7 @@ def main(cfg: Config):
             "exec_time": result.exec_time,
         }
     )
+    wandb.finish()
 
 
 if __name__ == "__main__":
