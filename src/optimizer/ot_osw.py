@@ -108,11 +108,10 @@ def compute_pi_ot_nsw(
     prev_loss = 1e7
     while True:
         optimier.zero_grad()
-        # project to feasible set
-        with torch.no_grad():
-            C.data = torch.clamp(C.data, 0.0)
-            a.data = torch.clamp(a.data, 0.0)
         with autocast(enabled=use_amp):
+            # project to feasible set
+            C.data = torch.clamp_(C.data, 0.0)
+            a.data = torch.clamp_(a.data, 0.0)
             # normalize a
             a_hat = normalize_a(a, high_tensor, n_rank)
 
