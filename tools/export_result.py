@@ -45,7 +45,6 @@ def export_result(user_name: str, output_dir: Path):
         data_list.append(data)
 
     runs_df = pd.DataFrame(data_list)
-    output_dir = Path("./output")
     output_dir.mkdir(exist_ok=True, parents=True)
     runs_df.to_csv(output_dir / "result.csv", index=False)
 
