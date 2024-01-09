@@ -1,10 +1,18 @@
+from typing import Optional
+
 import cvxpy as cvx
 import numpy as np
 
 from src.optimizer.base import BaseClusteredOptimizer, BaseOptimizer
 
 
-def compute_nsw(rel_mat: np.ndarray, expo: np.ndarray, high: np.ndarray, alpha: float = 0):
+def compute_nsw(
+    rel_mat: np.ndarray,
+    expo: np.ndarray,
+    high: np.ndarray,
+    alpha: float = 0,
+    solver: Optional[str] = None,
+) -> np.ndarray:
     n_query, n_doc = rel_mat.shape
     K = expo.shape[0]
     query_basis = np.ones((n_query, 1))
@@ -28,8 +36,7 @@ def compute_nsw(rel_mat: np.ndarray, expo: np.ndarray, high: np.ndarray, alpha: 
     constraints += [0.0 <= pi]
 
     prob = cvx.Problem(cvx.Maximize(obj), constraints)
-    prob.solve(solver=cvx.SCS)
-
+    prob.solve(solver=solver, verbose=False)
     pi_arr: np.ndarray = pi.value.reshape((n_query, n_doc, K))
     pi_arr = np.clip(pi_arr, 0.0, 1.0)
 
@@ -37,13 +44,14 @@ def compute_nsw(rel_mat: np.ndarray, expo: np.ndarray, high: np.ndarray, alpha: 
 
 
 class NSWOptimizer(BaseOptimizer):
-    def __init__(self, alpha: float = 0):
+    def __init__(self, alpha: float = 0, solver: Optional[str] = None):
         self.alpha = alpha
+        self.solver = solver
 
     def solve(self, rel_mat: np.ndarray, expo: np.ndarray) -> np.ndarray:
         n_doc = rel_mat.shape[1]
         high = np.ones(n_doc)
-        return compute_nsw(rel_mat, expo, high, self.alpha)
+        return compute_nsw(rel_mat, expo, high, self.alpha, solver=self.solver)
 
 
 class ClusteredNSWOptimizer(BaseClusteredOptimizer):
@@ -52,10 +60,12 @@ class ClusteredNSWOptimizer(BaseClusteredOptimizer):
         n_doc_cluster: int,
         n_query_cluster: int,
         alpha: float = 0,
+        solver: Optional[str] = None,
         random_state: int = 12345,
     ):
         super().__init__(n_doc_cluster, n_query_cluster, random_state)
         self.alpha = alpha
+        self.solver = solver
 
     def _solve(self, rel_mat: np.ndarray, expo: np.ndarray, high: np.ndarray) -> np.ndarray:
-        return compute_nsw(rel_mat, expo, high, self.alpha)
+        return compute_nsw(rel_mat, expo, high, self.alpha, solver=self.solver)

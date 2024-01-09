@@ -1,3 +1,4 @@
 name: nsw
 params:
   alpha: 0.0
+  solver: MOSEK
