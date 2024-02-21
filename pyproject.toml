@@ -35,7 +35,7 @@ url = "https://download.pytorch.org/whl/cu121"
 type = "index"
 
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling<=1.18.0"]
 build-backend = "hatchling.build"
 
 [tool.rye]
