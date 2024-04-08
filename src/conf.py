@@ -10,6 +10,9 @@ class OptimizerConfig:
 
 @dataclass
 class GeneratorConfig:
+
+
+    
     n_query: int
     n_doc: int
     lam: float
