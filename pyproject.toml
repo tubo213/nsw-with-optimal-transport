@@ -55,7 +55,7 @@ select = [
 ignore = []
 
 [tool.ruff]
-include = ["*.ipynb"]
+include = ["*.ipynb", "*.py"]
 line-length = 99
 
 
