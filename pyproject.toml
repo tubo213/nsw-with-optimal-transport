@@ -2,9 +2,7 @@
 name = "nsw-with-optimal-transport"
 version = "0.1.0"
 description = "Add a short description here"
-authors = [
-    { name = "Yuki Uehara", email = "s2320413@u.tsukuba.ac.jp" }
-]
+authors = [{ name = "Yuki Uehara", email = "s2320413@u.tsukuba.ac.jp" }]
 dependencies = [
     "numpy>=1.24.4",
     "matplotlib>=3.7.2",
@@ -39,9 +37,7 @@ build-backend = "hatchling.build"
 
 [tool.rye]
 managed = true
-dev-dependencies = [
-    "ruff>=0.3.5",
-]
+dev-dependencies = ["ruff>=0.3.5"]
 
 [tool.ruff.lint]
 fixable = ["ALL"]
