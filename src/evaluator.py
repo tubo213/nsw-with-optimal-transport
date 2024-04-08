@@ -12,6 +12,7 @@ class Result:
     nsw: float
     exec_time: Optional[float] = None
 
+
 # ref: https://github.com/usaito/kdd2022-fair-ranking-nsw
 def evaluate_pi(pi: np.ndarray, rel_mat: np.ndarray, v: np.ndarray) -> Result:
     n_query, n_doc = rel_mat.shape
