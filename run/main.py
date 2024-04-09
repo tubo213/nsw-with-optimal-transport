@@ -41,19 +41,11 @@ def main(cfg: Config):
 
     # evaluate
     result = evaluate_pi(pi, rel_mat_true, expo)
-    result.exec_time = exec_time
+    result["exec_time"] = exec_time
     print(result)
 
     # log
-    wandb.log(
-        {
-            "user_util": result.user_util,
-            "item_utils": result.item_utils,
-            "max_envies": result.max_envies,
-            "nsw": result.nsw,
-            "exec_time": result.exec_time,
-        }
-    )
+    wandb.log(result)
     wandb.finish()
 
 
