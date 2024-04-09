@@ -56,7 +56,7 @@ You can easily perform experiments by changing the parameters because [hydra](ht
 The following commands perform experiments with optimizer=nsw, number of documents of 100, 200, 300, and 400.
 
 ```bash
-rye run python run/main.py -m optimizer=nsw generator.n_doc=100,200,300,400
+rye run python main.py -m optimizer=nsw generator.n_doc=100,200,300,400
 ```
 
 ## Export experiment results
@@ -64,7 +64,7 @@ rye run python run/main.py -m optimizer=nsw generator.n_doc=100,200,300,400
 The following command exports the experiment results from wandb to the local directory.
 
 ```bash
-rye run python tools/export_results.py --user_name {your wandb user name}
+rye run python export_results.py --user_name {your wandb user name}
 ```
 
 # References
