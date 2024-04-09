@@ -3,6 +3,7 @@ import numpy as np
 from ._registry import register_optimizer
 from .base import BaseOptimizer
 
+__all__ = ["GreedyOptimizer", "greedy"]
 
 def choice_maximize_nsw_doc(
     impact_on_items: np.ndarray,  # (n_doc)

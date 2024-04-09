@@ -6,6 +6,8 @@ import numpy as np
 from ._registry import register_optimizer
 from .base import BaseClusteredOptimizer, BaseOptimizer
 
+__all__ = ["NSWOptimizer", "ClusteredNSWOptimizer", "nsw", "clustered_nsw"]
+
 
 def compute_nsw(
     rel_mat: np.ndarray,

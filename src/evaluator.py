@@ -1,5 +1,7 @@
 import numpy as np
 
+__all__ = ["evaluate_pi"]
+
 
 def compute_item_utils_unif(
     rel_mat: np.ndarray,
