@@ -5,7 +5,8 @@ import torch
 import torch.nn as nn
 from torch.cuda.amp import GradScaler, autocast
 
-from src.optimizer.base import BaseClusteredOptimizer, BaseOptimizer
+from ._registry import register_optimizer
+from .base import BaseClusteredOptimizer, BaseOptimizer
 
 METHOD = Literal["ot", "pg_ot"]
 
@@ -312,3 +313,13 @@ class ClusteredOTNSWOptimizer(BaseClusteredOptimizer):
                 self.tol,
                 self.device,
             )
+
+
+@register_optimizer
+def ot_nsw(**kwargs) -> OTNSWOptimizer:
+    return OTNSWOptimizer(**kwargs)
+
+
+@register_optimizer
+def clustered_ot_nsw(**kwargs) -> ClusteredOTNSWOptimizer:
+    return ClusteredOTNSWOptimizer(**kwargs)

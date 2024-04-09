@@ -3,7 +3,8 @@ from typing import Optional
 import cvxpy as cvx
 import numpy as np
 
-from src.optimizer.base import BaseClusteredOptimizer, BaseOptimizer
+from ._registry import register_optimizer
+from .base import BaseClusteredOptimizer, BaseOptimizer
 
 
 def compute_nsw(
@@ -69,3 +70,13 @@ class ClusteredNSWOptimizer(BaseClusteredOptimizer):
 
     def _solve(self, rel_mat: np.ndarray, expo: np.ndarray, high: np.ndarray) -> np.ndarray:
         return compute_nsw(rel_mat, expo, high, self.alpha, solver=self.solver)
+
+
+@register_optimizer
+def nsw(**kwargs) -> NSWOptimizer:
+    return NSWOptimizer(**kwargs)
+
+
+@register_optimizer
+def clustered_nsw(**kwargs) -> ClusteredNSWOptimizer:
+    return ClusteredNSWOptimizer(**kwargs)

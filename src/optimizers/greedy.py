@@ -1,6 +1,7 @@
 import numpy as np
 
-from src.optimizer.base import BaseOptimizer
+from ._registry import register_optimizer
+from .base import BaseOptimizer
 
 
 def choice_maximize_nsw_doc(
@@ -54,3 +55,8 @@ def compute_greedy(
 class GreedyOptimizer(BaseOptimizer):
     def solve(self, rel_mat: np.ndarray, expo: np.ndarray) -> np.ndarray:
         return compute_greedy(rel_mat, expo)
+
+
+@register_optimizer
+def greedy(**kwargs) -> GreedyOptimizer:
+    return GreedyOptimizer(**kwargs)
