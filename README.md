@@ -6,11 +6,6 @@
 
 [install documentation](https://rye-up.com/guide/installation/#installing-rye)
 
-Set the dependency resolution method to [uv](https://astral.sh/blog/uv)
-```bash
-rye config --set-bool behavior.use-uv=true
-```
-
 MacOS
 ```zsh
 curl -sSf https://rye-up.com/get | bash
@@ -27,6 +22,11 @@ source ~/.bashrc
 
 Windows  
 see [install documentation](https://rye-up.com/guide/installation/)
+
+#### Set the dependency resolution method to [uv](https://astral.sh/blog/uv)
+```bash
+rye config --set-bool behavior.use-uv=true
+```
 
 ### 2. Create virtual environment
 
