@@ -17,29 +17,28 @@ antlr4-python3-runtime==4.9.3
     # via omegaconf
 attrs==23.1.0
     # via aiohttp
-certifi==2023.11.17
+certifi==2022.12.7
     # via requests
-charset-normalizer==3.3.2
+charset-normalizer==2.1.1
     # via requests
 clarabel==0.6.0
     # via cvxpy
 cvxpy==1.4.1
-    # via cvxpy
     # via nsw-with-optimal-transport
 ecos==2.0.12
     # via cvxpy
-filelock==3.13.1
+filelock==3.9.0
     # via torch
     # via triton
 frozenlist==1.4.0
     # via aiohttp
     # via aiosignal
-fsspec==2023.10.0
+fsspec==2023.4.0
     # via pytorch-lightning
     # via torch
 hydra-core==1.3.2
     # via nsw-with-optimal-transport
-idna==3.6
+idna==3.4
     # via requests
     # via yarl
 jinja2==3.1.2
@@ -60,7 +59,7 @@ multidict==6.0.4
     # via yarl
 networkx==3.2.1
     # via torch
-numpy==1.26.2
+numpy==1.26.3
     # via clarabel
     # via cvxpy
     # via ecos
@@ -78,10 +77,11 @@ omegaconf==2.3.0
     # via hydra-core
 osqp==0.6.3
     # via cvxpy
-packaging==23.2
+packaging==22.0
     # via hydra-core
     # via lightning-utilities
     # via pytorch-lightning
+    # via torchmetrics
 pandas==2.1.3
     # via nsw-with-optimal-transport
 pybind11==2.11.1
@@ -97,7 +97,7 @@ pyyaml==6.0.1
     # via pytorch-lightning
 qdldl==0.1.7.post0
     # via osqp
-requests==2.31.0
+requests==2.28.1
     # via fsspec
 scikit-learn==1.3.2
     # via nsw-with-optimal-transport
@@ -112,6 +112,8 @@ scipy==1.11.4
     # via scs
 scs==3.2.4.post1
     # via cvxpy
+setuptools==69.0.2
+    # via lightning-utilities
 six==1.16.0
     # via python-dateutil
 sympy==1.12
@@ -122,9 +124,9 @@ torch==2.1.1+cu121
     # via nsw-with-optimal-transport
     # via pytorch-lightning
     # via torchmetrics
-torchmetrics==1.2.0
+torchmetrics==1.0.3
     # via pytorch-lightning
-tqdm==4.66.1
+tqdm==4.64.1
     # via pytorch-lightning
 triton==2.1.0
     # via torch
@@ -134,9 +136,7 @@ typing-extensions==4.8.0
     # via torch
 tzdata==2023.3
     # via pandas
-urllib3==2.1.0
+urllib3==1.26.13
     # via requests
 yarl==1.9.3
     # via aiohttp
-setuptools==69.0.2
-    # via lightning-utilities
