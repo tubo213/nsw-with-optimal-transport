@@ -6,10 +6,7 @@ import omegaconf
 import wandb
 from pytorch_lightning import seed_everything
 
-from src.conf import Config
-from src.evaluator import evaluate_pi
-from src.generator import exam_func, synthesize_rel_mat
-from src.optimizer.common import get_optimizer
+from src import Config, create_optimizer, evaluate_pi, exam_func, synthesize_rel_mat
 
 
 @hydra.main(config_path="conf", config_name="main", version_base="1.2")
@@ -34,7 +31,7 @@ def main(cfg: Config):
     expo = exam_func(generator_cfg.K, generator_cfg.shape)
 
     # solve
-    optimizer = get_optimizer(cfg.optimizer.name, cfg.optimizer.params)
+    optimizer = create_optimizer(cfg.optimizer.name, **cfg.optimizer.params)
     t0 = time.perf_counter()
     pi = optimizer.solve(rel_mat_obs, expo)
     exec_time = time.perf_counter() - t0
