@@ -1,6 +1,8 @@
 import numpy as np
 from sklearn.utils import check_random_state
 
+__all__ = ["synthesize_rel_mat", "exam_func"]
+
 
 # ref: https://github.com/usaito/kdd2022-fair-ranking-nsw
 def synthesize_rel_mat(

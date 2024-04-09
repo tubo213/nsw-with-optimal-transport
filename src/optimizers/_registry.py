@@ -3,6 +3,8 @@ from typing import Callable
 
 from .base import BaseOptimizer
 
+__all__ = ["register_optimizer", "list_optimizers"]
+
 _optimizer_entrypoints = {}
 
 

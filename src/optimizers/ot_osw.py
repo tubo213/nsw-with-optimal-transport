@@ -8,6 +8,8 @@ from torch.cuda.amp import GradScaler, autocast
 from ._registry import register_optimizer
 from .base import BaseClusteredOptimizer, BaseOptimizer
 
+__all__ = ["OTNSWOptimizer", "ClusteredOTNSWOptimizer", "ot_nsw", "clustered_ot_nsw"]
+
 METHOD = Literal["ot", "pg_ot"]
 
 

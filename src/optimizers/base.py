@@ -4,6 +4,8 @@ from typing import Optional
 import numpy as np
 from sklearn.cluster import KMeans
 
+__all__ = ["BaseOptimizer", "BaseClusteredOptimizer"]
+
 
 class BaseOptimizer(ABC):
     @abstractmethod
