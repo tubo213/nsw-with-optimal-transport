@@ -64,7 +64,7 @@ rye run python main.py -m optimizer=nsw generator.n_doc=100,200,300,400
 The following command exports the experiment results from wandb to the local directory.
 
 ```bash
-rye run python export_results.py --user_name {your wandb user name}
+rye run python tools/export_results.py --user_name {your wandb user name}
 ```
 
 # References
