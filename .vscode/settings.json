@@ -24,5 +24,13 @@
   "ruff.format.args": [
     "--config=pyproject.toml"
   ],
+  "mypy-type-checker.path": [
+    "rye",
+    "run",
+    "mypy"
+  ],
+  "mypy-type-checker.args": [
+    "--config-file=pyproject.toml"
+  ],
   "files.autoSave": "afterDelay",
 }
