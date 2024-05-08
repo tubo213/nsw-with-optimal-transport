@@ -12,8 +12,8 @@
   "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
   "[python]": {
     "editor.codeActionsOnSave": {
-      "source.fixAll.ruff": true,
-      "source.organizeImports.ruff": true
+      "source.fixAll.ruff": "explicit",
+      "source.organizeImports.ruff": "explicit"
     },
     "editor.defaultFormatter": "charliermarsh.ruff",
     "editor.formatOnSave": true
@@ -23,6 +23,14 @@
   ],
   "ruff.format.args": [
     "--config=pyproject.toml"
+  ],
+  "mypy-type-checker.path": [
+    "rye",
+    "run",
+    "mypy"
+  ],
+  "mypy-type-checker.args": [
+    "--config-file=pyproject.toml"
   ],
   "files.autoSave": "afterDelay",
 }

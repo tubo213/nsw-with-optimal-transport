@@ -1,4 +1,7 @@
+from typing import Any
+
 import numpy as np
+from numpy.typing import NDArray
 
 from ._registry import register_optimizer
 from .base import BaseOptimizer
@@ -7,11 +10,11 @@ __all__ = ["GreedyNSWOptimizer", "greedy_nsw"]
 
 
 def choice_maximize_nsw_doc(
-    impact_on_items: np.ndarray,  # (n_doc)
-    impact_qk: np.ndarray,  # (n_doc)
-    used_docs: np.ndarray,  # (n_doc)
+    impact_on_items: NDArray[np.float_],  # (n_doc)
+    impact_qk: NDArray[np.float_],  # (n_doc)
+    used_docs: NDArray[np.float_],  # (n_doc)
     eps: float = 1e-5,
-) -> int:
+) -> np.intp:
     # 既に選択されたdocの影響は0
     impact_qk = impact_qk * ~used_docs  # (n_doc)
 
@@ -27,9 +30,9 @@ def choice_maximize_nsw_doc(
 
 
 def compute_greedy_nsw(
-    rel_mat: np.ndarray,  # (n_query, n_doc)
-    expo: np.ndarray,  # (K, 1)
-) -> np.ndarray:
+    rel_mat: NDArray[np.float_],  # (n_query, n_doc)
+    expo: NDArray[np.float_],  # (K, 1)
+) -> NDArray[np.float_]:
     n_query, n_doc = rel_mat.shape
     K = expo.shape[0]
     impact = rel_mat[:, :, None] * expo.reshape(1, 1, K)  # (n_query, n_doc, K)
@@ -55,10 +58,10 @@ def compute_greedy_nsw(
 
 
 class GreedyNSWOptimizer(BaseOptimizer):
-    def solve(self, rel_mat: np.ndarray, expo: np.ndarray) -> np.ndarray:
+    def solve(self, rel_mat: NDArray[np.float_], expo: NDArray[np.float_]) -> NDArray[np.float_]:
         return compute_greedy_nsw(rel_mat, expo)
 
 
 @register_optimizer
-def greedy_nsw(**kwargs) -> GreedyNSWOptimizer:
+def greedy_nsw(**kwargs: Any) -> GreedyNSWOptimizer:
     return GreedyNSWOptimizer(**kwargs)

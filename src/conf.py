@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Literal
+from typing import Any, Literal
 
 __all__ = ["Config", "OptimizerConfig", "GeneratorConfig"]
 
@@ -7,7 +7,7 @@ __all__ = ["Config", "OptimizerConfig", "GeneratorConfig"]
 @dataclass
 class OptimizerConfig:
     name: str
-    params: dict
+    params: dict[str, Any]
 
 
 @dataclass

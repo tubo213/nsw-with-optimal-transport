@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Any
 
 import click
 import pandas as pd
@@ -6,8 +7,8 @@ import wandb
 
 
 # 再帰的にdictを展開する
-def flatten_dict(d: dict, parent_key: str = "", sep: str = "_"):
-    items = []
+def flatten_dict(d: dict[Any, Any], parent_key: str = "", sep: str = "_") -> dict[str, Any]:
+    items: list[tuple[str, Any]] = []
     for k, v in d.items():
         new_key = parent_key + sep + k if parent_key else k
 
@@ -21,7 +22,7 @@ def flatten_dict(d: dict, parent_key: str = "", sep: str = "_"):
 @click.command()
 @click.option("--user_name", type=str, default="213tubo", help="wandb user name")
 @click.option("--output_dir", type=Path, default="./output", help="output directory")
-def export_result(user_name: str, output_dir: Path):
+def export_result(user_name: str, output_dir: Path) -> None:
     api = wandb.Api()
 
     # Project is specified by <entity/project-name>

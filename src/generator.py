@@ -1,4 +1,5 @@
 import numpy as np
+from numpy.typing import NDArray
 from sklearn.utils import check_random_state
 
 __all__ = ["synthesize_rel_mat", "exam_func"]
@@ -12,7 +13,7 @@ def synthesize_rel_mat(
     flip_ratio: float = 0.3,
     noise: float = 0.0,
     random_state: int = 12345,
-) -> tuple[np.ndarray, np.ndarray]:
+) -> tuple[NDArray[np.float_], NDArray[np.float_]]:
     random_ = check_random_state(random_state)
 
     # generate true relevance matrix
@@ -42,7 +43,7 @@ def synthesize_rel_mat(
     return rel_mat_true, rel_mat_obs
 
 
-def exam_func(K: int, shape: str = "inv") -> np.ndarray:
+def exam_func(K: int, shape: str = "inv") -> NDArray[np.float_]:
     assert shape in ["inv", "exp", "log"]
     if shape == "inv":
         v = np.ones(K) / np.arange(1, K + 1)

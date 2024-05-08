@@ -1,4 +1,7 @@
+from typing import Any
+
 import numpy as np
+from numpy.typing import NDArray
 from scipy.stats import rankdata
 
 from ._registry import register_optimizer
@@ -8,9 +11,9 @@ __all__ = ["GreedyOptimizer", "greedy"]
 
 
 def compute_greedy(
-    rel_mat: np.ndarray,  # (n_query, n_doc)
-    expo: np.ndarray,  # (K, 1)
-) -> np.ndarray:
+    rel_mat: NDArray[np.float_],  # (n_query, n_doc)
+    expo: NDArray[np.float_],  # (K, 1)
+) -> NDArray[np.float_]:
     n_query, n_doc = rel_mat.shape
     K = expo.shape[0]
 
@@ -24,10 +27,10 @@ def compute_greedy(
 
 
 class GreedyOptimizer(BaseOptimizer):
-    def solve(self, rel_mat: np.ndarray, expo: np.ndarray) -> np.ndarray:
+    def solve(self, rel_mat: NDArray[np.float_], expo: NDArray[np.float_]) -> NDArray[np.float_]:
         return compute_greedy(rel_mat, expo)
 
 
 @register_optimizer
-def greedy(**kwargs) -> GreedyOptimizer:
+def greedy(**kwargs: Any) -> GreedyOptimizer:
     return GreedyOptimizer(**kwargs)

@@ -1,7 +1,8 @@
-from typing import Optional
+from typing import Any, Optional
 
 import cvxpy as cvx
 import numpy as np
+from numpy.typing import NDArray
 
 from ._registry import register_optimizer
 from .base import BaseClusteredOptimizer, BaseOptimizer
@@ -10,12 +11,12 @@ __all__ = ["NSWOptimizer", "ClusteredNSWOptimizer", "nsw", "clustered_nsw"]
 
 
 def compute_nsw(
-    rel_mat: np.ndarray,
-    expo: np.ndarray,
-    high: np.ndarray,
+    rel_mat: NDArray[np.float_],
+    expo: NDArray[np.float_],
+    high: NDArray[np.float_],
     alpha: float = 0,
     solver: Optional[str] = None,
-) -> np.ndarray:
+) -> NDArray[np.float_]:
     n_query, n_doc = rel_mat.shape
     K = expo.shape[0]
     query_basis = np.ones((n_query, 1))
@@ -25,7 +26,7 @@ def compute_nsw(
     obj = 0.0
     constraints = []
     for d in np.arange(n_doc):
-        obj += am_rel[d] * cvx.log(rel_mat[:, d] @ pi[:, K * d : K * (d + 1)] @ expo)
+        obj += am_rel[d] * cvx.log(rel_mat[:, d] @ pi[:, K * d : K * (d + 1)] @ expo)  # type: ignore
         # feasible allocation
         basis_ = np.zeros((n_doc * K, 1))
         basis_[K * d : K * (d + 1)] = 1
@@ -40,7 +41,7 @@ def compute_nsw(
 
     prob = cvx.Problem(cvx.Maximize(obj), constraints)
     prob.solve(solver=solver, verbose=False)
-    pi_arr: np.ndarray = pi.value.reshape((n_query, n_doc, K))
+    pi_arr: NDArray[np.float_] = pi.value.reshape((n_query, n_doc, K))
     pi_arr = np.clip(pi_arr, 0.0, 1.0)
 
     return pi_arr
@@ -51,7 +52,7 @@ class NSWOptimizer(BaseOptimizer):
         self.alpha = alpha
         self.solver = solver
 
-    def solve(self, rel_mat: np.ndarray, expo: np.ndarray) -> np.ndarray:
+    def solve(self, rel_mat: NDArray[np.float_], expo: NDArray[np.float_]) -> NDArray[np.float_]:
         n_doc = rel_mat.shape[1]
         high = np.ones(n_doc)
         return compute_nsw(rel_mat, expo, high, self.alpha, solver=self.solver)
@@ -70,15 +71,17 @@ class ClusteredNSWOptimizer(BaseClusteredOptimizer):
         self.alpha = alpha
         self.solver = solver
 
-    def _solve(self, rel_mat: np.ndarray, expo: np.ndarray, high: np.ndarray) -> np.ndarray:
+    def _solve(
+        self, rel_mat: NDArray[np.float_], expo: NDArray[np.float_], high: NDArray[np.float_]
+    ) -> NDArray[np.float_]:
         return compute_nsw(rel_mat, expo, high, self.alpha, solver=self.solver)
 
 
 @register_optimizer
-def nsw(**kwargs) -> NSWOptimizer:
+def nsw(**kwargs: Any) -> NSWOptimizer:
     return NSWOptimizer(**kwargs)
 
 
 @register_optimizer
-def clustered_nsw(**kwargs) -> ClusteredNSWOptimizer:
+def clustered_nsw(**kwargs: Any) -> ClusteredNSWOptimizer:
     return ClusteredNSWOptimizer(**kwargs)

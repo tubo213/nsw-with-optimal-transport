@@ -1,29 +1,32 @@
 import numpy as np
+from numpy.typing import NDArray
 
 __all__ = ["evaluate_pi"]
 
 
 def compute_item_utils_unif(
-    rel_mat: np.ndarray,
-    v: np.ndarray,
-) -> np.ndarray:
+    rel_mat: NDArray[np.float_],
+    v: NDArray[np.float_],
+) -> NDArray[np.float_]:
     n_query, n_doc = rel_mat.shape
     K = v.shape[0]
     unif_pi = np.ones((n_query, n_doc, K)) / n_doc
     expo_mat = (unif_pi * v.T).sum(2)
-    click_mat: np.ndarray = rel_mat * expo_mat
-    item_utils: np.ndarray = click_mat.sum(0) / n_query
+    click_mat: NDArray[np.float_] = rel_mat * expo_mat
+    item_utils: NDArray[np.float_] = click_mat.sum(0) / n_query
 
     return item_utils
 
 
 # ref: https://github.com/usaito/kdd2022-fair-ranking-nsw
-def evaluate_pi(pi: np.ndarray, rel_mat: np.ndarray, v: np.ndarray) -> dict[str, float]:
+def evaluate_pi(
+    pi: NDArray[np.float_], rel_mat: NDArray[np.float_], v: NDArray[np.float_]
+) -> dict[str, float]:
     n_query, n_doc = rel_mat.shape
     expo_mat = (pi * v.T).sum(2)
-    click_mat: np.ndarray = rel_mat * expo_mat
+    click_mat: NDArray[np.float_] = rel_mat * expo_mat
     user_util = click_mat.sum() / n_query
-    item_utils: np.ndarray = click_mat.sum(0) / n_query
+    item_utils: NDArray[np.float_] = click_mat.sum(0) / n_query
     item_utils_unif = compute_item_utils_unif(rel_mat, v)
     nsw: float = np.power(item_utils.prod(), 1 / n_doc)
 

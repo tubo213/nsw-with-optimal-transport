@@ -1,9 +1,10 @@
-from typing import Literal, Union
+from typing import Any, Literal, Union
 
 import numpy as np
 import torch
 import torch.nn as nn
-from torch.cuda.amp import GradScaler, autocast
+from numpy.typing import NDArray
+from torch.cuda.amp import GradScaler, autocast  # type: ignore
 
 from ._registry import register_optimizer
 from .base import BaseClusteredOptimizer, BaseOptimizer
@@ -13,7 +14,9 @@ __all__ = ["OTNSWOptimizer", "ClusteredOTNSWOptimizer", "ot_nsw", "clustered_ot_
 METHOD = Literal["ot", "pg_ot"]
 
 
-def sinkhorn(C: torch.Tensor, a: Union[int, torch.Tensor] = 1, n_iter: int = 15, eps: float = 0.1):
+def sinkhorn(
+    C: torch.Tensor, a: Union[int, torch.Tensor] = 1, n_iter: int = 15, eps: float = 0.1
+) -> torch.Tensor:
     """
 
     Args:
@@ -31,13 +34,13 @@ def sinkhorn(C: torch.Tensor, a: Union[int, torch.Tensor] = 1, n_iter: int = 15,
 
     # sinkhorn iteration
     for _ in range(n_iter):
-        v = 1 / (torch.bmm(K.transpose(1, 2), u)).detach()  # (n_query, n_doc, 1)
+        v: torch.Tensor = 1 / (torch.bmm(K.transpose(1, 2), u)).detach()  # (n_query, n_doc, 1)
         u = a / (torch.bmm(K, v)).detach()  # (n_query, n_doc, 1)
 
     return u * K * v.transpose(1, 2)
 
 
-def normalize_a(a: torch.Tensor, high: torch.Tensor, k: int):
+def normalize_a(a: torch.Tensor, high: torch.Tensor, k: int) -> torch.Tensor:
     """_description_
 
     Args:
@@ -70,22 +73,22 @@ def compute_nsw_loss(
 
 
 def compute_pi_ot_nsw(
-    rel_mat: np.ndarray,
-    expo: np.ndarray,
-    high: np.ndarray,
+    rel_mat: NDArray[np.float_],
+    expo: NDArray[np.float_],
+    high: NDArray[np.float_],
     alpha: float = 0.0,
     lr: float = 0.01,
     ot_n_iter: int = 30,
     last_ot_n_iter: int = 100,
     tol: float = 1e-6,
     device: str = "cpu",
-) -> np.ndarray:
+) -> NDArray[np.float_]:
     """_description_
 
     Args:
-        rel_mat (np.ndarray): relevance matrix. (n_query, n_doc)
-        expo (np.ndarray): exposure matrix. (n_rank, 1)
-        high (np.ndarray): high matrix. (n_doc, )
+        rel_mat (NDArray[np.float_]): relevance matrix. (n_query, n_doc)
+        expo (NDArray[np.float_]): exposure matrix. (n_rank, 1)
+        high (NDArray[np.float_]): high matrix. (n_doc, )
         alpha (float, optional): alpha. Defaults to 0.0.
         lr (float, optional): learning rate. Defaults to 0.01.
         ot_n_iter (int, optional): number of iteration for ot. Defaults to 30.
@@ -94,7 +97,7 @@ def compute_pi_ot_nsw(
         device (str, optional): device. Defaults to "cpu".
 
     Returns:
-        np.ndarray: _description_
+        NDArray[np.float_]: _description_
     """
     n_query, n_doc = rel_mat.shape
     n_rank = expo.shape[0]
@@ -121,7 +124,7 @@ def compute_pi_ot_nsw(
             a_hat = normalize_a(a, high_tensor, n_rank)
 
             # compute pi
-            pi = sinkhorn(C, a_hat, n_iter=ot_n_iter)
+            pi: torch.Tensor = sinkhorn(C, a_hat, n_iter=ot_n_iter)
             loss = compute_nsw_loss(pi, click_prob, am_rel)
         scaler.scale(loss).backward()
         scaler.step(optimier)
@@ -141,26 +144,26 @@ def compute_pi_ot_nsw(
             pi = sinkhorn(C, a_hat, n_iter=last_ot_n_iter)
             pi /= pi.sum(dim=1, keepdim=True)
 
-    return pi.cpu().numpy()
+    return pi.detach().cpu().numpy()  # type: ignore
 
 
 def compute_pi_pg_ot_nsw(
-    rel_mat: np.ndarray,
-    expo: np.ndarray,
-    high: np.ndarray,
+    rel_mat: NDArray[np.float_],
+    expo: NDArray[np.float_],
+    high: NDArray[np.float_],
     alpha: float = 0.0,
     lr: float = 0.01,
     ot_n_iter: int = 30,
     last_ot_n_iter: int = 100,
     tol: float = 1e-6,
     device: str = "cpu",
-) -> np.ndarray:
+) -> NDArray[np.float_]:
     """_description_
 
     Args:
-        rel_mat (np.ndarray): relevance matrix. (n_query, n_doc)
-        expo (np.ndarray): exposure matrix. (n_rank, 1)
-        high (np.ndarray): high matrix. (n_doc, )
+        rel_mat (NDArray[np.float_]): relevance matrix. (n_query, n_doc)
+        expo (NDArray[np.float_]): exposure matrix. (n_rank, 1)
+        high (NDArray[np.float_]): high matrix. (n_doc, )
         alpha (float, optional): alpha. Defaults to 0.0.
         lr (float, optional): learning rate. Defaults to 0.01.
         ot_n_iter (int, optional): number of iteration for ot. Defaults to 30.
@@ -169,7 +172,7 @@ def compute_pi_pg_ot_nsw(
         device (str, optional): device. Defaults to "cpu".
 
     Returns:
-        np.ndarray: _description_
+        NDArray[np.float_]: _description_
     """
     n_query, n_doc = rel_mat.shape
     n_rank = expo.shape[0]
@@ -214,9 +217,9 @@ def compute_pi_pg_ot_nsw(
             a_hat = normalize_a(a, high_tensor, n_rank)
             # compute pi
             X.data = sinkhorn(X, a_hat, n_iter=last_ot_n_iter)
-            X /= X.sum(dim=1, keepdim=True)
 
-    return X.detach().cpu().numpy()
+    X: NDArray[np.float_] = X.detach().cpu().numpy()
+    return X
 
 
 class OTNSWOptimizer(BaseOptimizer):
@@ -238,7 +241,7 @@ class OTNSWOptimizer(BaseOptimizer):
         self.tol = tol
         self.device = device
 
-    def solve(self, rel_mat: np.ndarray, expo: np.ndarray) -> np.ndarray:
+    def solve(self, rel_mat: NDArray[np.float_], expo: NDArray[np.float_]) -> NDArray[np.float_]:
         n_doc = rel_mat.shape[1]
         high = np.ones(n_doc)
         if self.method == "ot":
@@ -290,7 +293,9 @@ class ClusteredOTNSWOptimizer(BaseClusteredOptimizer):
         self.tol = tol
         self.device = device
 
-    def _solve(self, rel_mat: np.ndarray, expo: np.ndarray, high: np.ndarray) -> np.ndarray:
+    def _solve(
+        self, rel_mat: NDArray[np.float_], expo: NDArray[np.float_], high: NDArray[np.float_]
+    ) -> NDArray[np.float_]:
         if self.method == "ot":
             return compute_pi_ot_nsw(
                 rel_mat,
@@ -318,10 +323,10 @@ class ClusteredOTNSWOptimizer(BaseClusteredOptimizer):
 
 
 @register_optimizer
-def ot_nsw(**kwargs) -> OTNSWOptimizer:
+def ot_nsw(**kwargs: Any) -> OTNSWOptimizer:
     return OTNSWOptimizer(**kwargs)
 
 
 @register_optimizer
-def clustered_ot_nsw(**kwargs) -> ClusteredOTNSWOptimizer:
+def clustered_ot_nsw(**kwargs: Any) -> ClusteredOTNSWOptimizer:
     return ClusteredOTNSWOptimizer(**kwargs)

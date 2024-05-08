@@ -1,7 +1,8 @@
-from typing import Optional
+from typing import Any, Optional
 
 import cvxpy as cvx
 import numpy as np
+from numpy.typing import NDArray
 
 from ._registry import register_optimizer
 from .base import BaseClusteredOptimizer, BaseOptimizer
@@ -10,11 +11,23 @@ __all__ = ["ExpoFairOptimizer", "ClusteredExpoFairOptimizer", "expo_fair", "clus
 
 
 def compute_pi_expo_fair(
-    rel_mat: np.ndarray,  # (n_query, n_doc)
-    expo: np.ndarray,  # (K, 1)
-    high: np.ndarray,  # (n_doc, 1)
+    rel_mat: NDArray[np.float_],  # (n_query, n_doc)
+    expo: NDArray[np.float_],  # (K, 1)
+    high: NDArray[np.float_],  # (n_doc, 1)
     solver: Optional[str] = None,
-) -> np.ndarray:
+) -> NDArray[np.float_]:
+    """
+    Compute the allocation matrix pi for the exponential fair ranking algorithm.
+
+    Parameters:
+        rel_mat (NDArray[np.float_]): The relevance matrix of shape (n_query, n_doc).
+        expo (NDArray[np.float_]): The exposure vector of shape (K, 1).
+        high (NDArray[np.float_]): The high vector of shape (n_doc, 1).
+        solver (Optional[str]): The solver to use for solving the optimization problem. Defaults to None.
+
+    Returns:
+        NDArray[np.float_]: The allocation matrix pi of shape (n_query, n_doc, K).
+    """
     n_query, n_doc = rel_mat.shape
     K = expo.shape[0]
     query_basis = np.ones((n_query, 1))
@@ -44,7 +57,7 @@ def compute_pi_expo_fair(
     prob = cvx.Problem(cvx.Maximize(obj), constraints)
     prob.solve(solver=solver, verbose=False)
 
-    pi = pi.value.reshape((n_query, n_doc, K))
+    pi: NDArray[np.float_] = pi.value.reshape((n_query, n_doc, K))
     pi = np.clip(pi, 0.0, 1.0)
 
     return pi
@@ -54,7 +67,7 @@ class ExpoFairOptimizer(BaseOptimizer):
     def __init__(self, solver: Optional[str] = None):
         self.solver = solver
 
-    def solve(self, rel_mat: np.ndarray, expo: np.ndarray) -> np.ndarray:
+    def solve(self, rel_mat: NDArray[np.float_], expo: NDArray[np.float_]) -> NDArray[np.float_]:
         n_doc = rel_mat.shape[1]
         high = np.ones(n_doc)
         return compute_pi_expo_fair(rel_mat, expo, high, solver=self.solver)
@@ -71,15 +84,17 @@ class ClusteredExpoFairOptimizer(BaseClusteredOptimizer):
         super().__init__(n_doc_cluster, n_query_cluster, random_state)
         self.solver = solver
 
-    def _solve(self, rel_mat: np.ndarray, expo: np.ndarray, high: np.ndarray) -> np.ndarray:
+    def _solve(
+        self, rel_mat: NDArray[np.float_], expo: NDArray[np.float_], high: NDArray[np.float_]
+    ) -> NDArray[np.float_]:
         return compute_pi_expo_fair(rel_mat, expo, high, solver=self.solver)
 
 
 @register_optimizer
-def expo_fair(**kwargs) -> ExpoFairOptimizer:
+def expo_fair(**kwargs: Any) -> ExpoFairOptimizer:
     return ExpoFairOptimizer(**kwargs)
 
 
 @register_optimizer
-def clustered_expo_fair(**kwargs) -> ClusteredExpoFairOptimizer:
+def clustered_expo_fair(**kwargs: Any) -> ClusteredExpoFairOptimizer:
     return ClusteredExpoFairOptimizer(**kwargs)

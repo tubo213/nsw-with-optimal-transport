@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Optional
 
 import numpy as np
+from numpy.typing import NDArray
 from sklearn.cluster import KMeans
 
 __all__ = ["BaseOptimizer", "BaseClusteredOptimizer"]
@@ -9,15 +10,16 @@ __all__ = ["BaseOptimizer", "BaseClusteredOptimizer"]
 
 class BaseOptimizer(ABC):
     @abstractmethod
-    def solve(self, rel_mat: np.ndarray, expo: np.ndarray) -> np.ndarray:
+    def solve(self, rel_mat: NDArray[np.float_], expo: NDArray[np.float_]) -> NDArray[np.float_]:
         """
+        Solves the optimization problem using the given relevance matrix and exposure matrix.
 
         Args:
-            rel_mat (np.ndarray): relevance matrix. (n_query, n_doc)
-            expo (np.ndarray): exposure matrix. (n_rank, 1)
+            rel_mat (NDArray[np.float_]): The relevance matrix of shape (n_query, n_doc).
+            expo (NDArray[np.float_]): The exposure matrix of shape (n_rank, 1).
 
         Returns:
-            np.ndarray: pi matrix. (n_query, n_doc, n_rank)
+            NDArray[np.float_]: The pi matrix of shape (n_query, n_doc, n_rank).
         """
         raise NotImplementedError
 
@@ -41,15 +43,16 @@ class BaseClusteredOptimizer(BaseOptimizer):
         self.n_query_cluster = n_query_cluster
         self.random_state = random_state
 
-    def solve(self, rel_mat: np.ndarray, expo: np.ndarray) -> np.ndarray:
+    def solve(self, rel_mat: NDArray[np.float_], expo: NDArray[np.float_]) -> NDArray[np.float_]:
         """
+        Solves the optimization problem and returns the pi matrix.
 
         Args:
-            rel_mat (np.ndarray): relevance matrix. (n_query, n_doc)
-            expo (np.ndarray): exposure matrix. (n_rank, 1)
+            rel_mat (NDArray[np.float_]): The relevance matrix of shape (n_query, n_doc).
+            expo (NDArray[np.float_]): The exposure matrix of shape (n_rank, 1).
 
         Returns:
-            np.ndarray: pi matrix. (n_query, n_doc, n_rank)
+            NDArray[np.float_]: The pi matrix of shape (n_query, n_doc, n_rank).
         """
         rel_mat, high, item_cluster_ids, query_cluster_ids = self._clustering(rel_mat)
         pi = self._solve(rel_mat, expo, high)
@@ -58,18 +61,22 @@ class BaseClusteredOptimizer(BaseOptimizer):
         return pi[query_cluster_ids][:, item_cluster_ids]
 
     def _clustering(
-        self, rel_mat: np.ndarray
-    ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+        self, rel_mat: NDArray[np.float_]
+    ) -> tuple[NDArray[np.float_], NDArray[np.float_], NDArray[np.int_], NDArray[np.int_]]:
         """Clustering relevance matrix.
         1. Cluster items
         2. Cluster queries
 
         Args:
-            rel_mat (np.ndarray): relevance matrix. (n_query, n_doc)
+            rel_mat (NDArray[np.float_]): relevance matrix. (n_query, n_doc)
 
         Returns:
-            tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-                (rel_mat, high, item_cluster_ids, query_cluster_ids)
+            tuple[NDArray[np.float_], NDArray[np.float_], NDArray[np.float_], NDArray[np.float_]]:
+                A tuple containing the following arrays:
+                - rel_mat (NDArray[np.float_]): The updated relevance matrix after clustering.
+                - high (NDArray[np.float_]): The high values for each item cluster.
+                - item_cluster_ids (NDArray[np.int_]): The cluster IDs for each item.
+                - query_cluster_ids (NDArray[np.int_]): The cluster IDs for each query.
         """
         # item clustering
         if self.n_doc_cluster is None:
@@ -98,15 +105,18 @@ class BaseClusteredOptimizer(BaseOptimizer):
         return rel_mat, high, item_cluster_ids, query_cluster_ids
 
     @abstractmethod
-    def _solve(self, rel_mat: np.ndarray, expo: np.ndarray, high: np.ndarray) -> np.ndarray:
+    def _solve(
+        self, rel_mat: NDArray[np.float_], expo: NDArray[np.float_], high: NDArray[np.float_]
+    ) -> NDArray[np.float_]:
         """
+        Solves the optimization problem using the given inputs.
 
         Args:
-            rel_mat (np.ndarray): relevance matrix. (n_query_cluster, n_doc_cluster)
-            expo (np.ndarray): exposure matrix. (n_rank, 1)
-            high (np.ndarray): number of items in each cluster. (n_doc_cluster)
+            rel_mat (NDArray[np.float_]): The relevance matrix of shape (n_query_cluster, n_doc_cluster).
+            expo (NDArray[np.float_]): The exposure matrix of shape (n_rank, 1).
+            high (NDArray[np.float_]): The number of items in each cluster of shape (n_doc_cluster).
 
         Returns:
-            np.ndarray: pi matrix. (n_query_cluster, n_doc_cluster, n_rank)
+            NDArray[np.float_]: The pi matrix of shape (n_query_cluster, n_doc_cluster, n_rank).
         """
         raise NotImplementedError

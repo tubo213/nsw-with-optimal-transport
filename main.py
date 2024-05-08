@@ -10,7 +10,7 @@ from src import Config, create_optimizer, evaluate_pi, exam_func, synthesize_rel
 
 
 @hydra.main(config_path="conf", config_name="main", version_base="1.2")
-def main(cfg: Config):
+def main(cfg: Config) -> None:
     wandb_config = omegaconf.OmegaConf.to_container(cfg, resolve=True, throw_on_missing=True)
     project_name = "nsw-with-optimal-transport"
     current_dir_name = Path.cwd().name
