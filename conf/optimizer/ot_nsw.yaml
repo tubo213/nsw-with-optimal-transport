@@ -7,3 +7,4 @@ params:
   last_ot_n_iter: 50
   tol: 0.001
   device: cuda
+  use_amp: false
