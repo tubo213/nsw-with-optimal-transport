@@ -1,0 +1,9 @@
+name: ot_nsw
+params:
+  method: pg_ot
+  alpha: 0.0
+  lr: 0.01
+  ot_n_iter: 30
+  last_ot_n_iter: 50
+  tol: 0.001
+  device: cuda

@@ -1,0 +1,7 @@
+n_query: 500
+n_doc: 1600
+K: 10
+lam: 1.0
+flip_ratio: 0.3
+noise: 0.05
+shape: inv

@@ -18,14 +18,16 @@ def sinkhorn(
     C: torch.Tensor, a: Union[int, torch.Tensor] = 1, n_iter: int = 15, eps: float = 0.1
 ) -> torch.Tensor:
     """
+    Applies the Sinkhorn algorithm to compute optimal transport between two sets of points.
 
     Args:
-        C (torch.Tensor): Cost matrix. (n_query, n_doc, n_rank)
-        a (Union[int, torch.Tensor], optional): (n_query, n_doc, 1)
-        n_iter (int, optional): Number of iteration. Defaults to 15.
-        eps (float, optional): Epsilon. Defaults to 0.1.
+        C (torch.Tensor): Cost matrix. Shape: (n_query, n_doc, n_rank)
+        a (Union[int, torch.Tensor], optional): Regularization parameter. Shape: (n_query, n_doc, 1). Defaults to 1.
+        n_iter (int, optional): Number of iterations. Defaults to 15.
+        eps (float, optional): Epsilon parameter. Defaults to 0.1.
+
     Returns:
-        torch.Tensor: (n_query, n_doc, n_rank)
+        torch.Tensor: Optimal transport matrix. Shape: (n_query, n_doc, n_rank)
     """
     device = C.device
     n_query, n_doc, _ = C.shape
