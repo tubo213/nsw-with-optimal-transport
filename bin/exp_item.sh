@@ -5,5 +5,5 @@ SEEDS="seed=0,1,2,3,4"
 
 for optimizer in $PREV_OPTIMIZERS $PROPOSED_OPTIMIZERS
 do
-rye run python main.py -m exp_name=exp_item $optimizer $SEEDS generator=exp_item $N_DOC
+rye run python main.py -m exp_name=exp_item $optimizer $SEEDS generator=base_size_item $N_DOC
 done
