@@ -4,23 +4,15 @@ hydra:
     name: main
     chdir: true
   run:
-    dir: output/${exp_name}/single
+    dir: output/${exp_name}/${hydra.job.override_dirname}
   sweep:
     dir: output/${exp_name}
-    subdir: run${hydra.job.num}
+    subdir: ${hydra.job.override_dirname}
 
 defaults:
   - _self_
   - optimizer: nsw
+  - generator: size1
 
 exp_name: dummy
 seed: 0
-# ---------- Generator ----------
-generator:
-  n_query: 100
-  n_doc: 50
-  lam: 1.0
-  flip_ratio: 0.3
-  noise: 0.05
-  K: 10
-  shape: inv
