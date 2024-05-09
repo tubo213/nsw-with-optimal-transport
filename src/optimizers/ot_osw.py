@@ -1,10 +1,10 @@
-from typing import Any, Literal, Union
+from typing import Any, Literal, Optional, Union
 
 import numpy as np
 import torch
 import torch.nn as nn
 from numpy.typing import NDArray
-from torch.cuda.amp import GradScaler, autocast  # type: ignore
+from torch.cuda.amp import GradScaler, autocast
 
 from ._registry import register_optimizer
 from .base import BaseClusteredOptimizer, BaseOptimizer
@@ -84,6 +84,7 @@ def compute_pi_ot_nsw(
     last_ot_n_iter: int = 100,
     tol: float = 1e-6,
     device: str = "cpu",
+    use_amp: Optional[bool] = None,
 ) -> NDArray[np.float_]:
     """_description_
 
@@ -113,7 +114,8 @@ def compute_pi_ot_nsw(
     C = nn.Parameter(torch.rand(n_query, n_doc, n_rank).to(device))
     a = nn.Parameter(torch.ones(n_query, n_doc, 1).to(device))
     optimier = torch.optim.Adam([C, a], lr=lr)
-    use_amp = True if device == "cuda" else False
+    if use_amp is None:
+        use_amp = True if device == "cuda" else False
     scaler = GradScaler(enabled=use_amp)
     prev_loss = 1e7
     while True:
@@ -159,6 +161,7 @@ def compute_pi_pg_ot_nsw(
     last_ot_n_iter: int = 100,
     tol: float = 1e-6,
     device: str = "cpu",
+    use_amp: Optional[bool] = None,
 ) -> NDArray[np.float_]:
     """_description_
 
@@ -234,6 +237,7 @@ class OTNSWOptimizer(BaseOptimizer):
         last_ot_n_iter: int = 100,
         tol: float = 1e-6,
         device: str = "cpu",
+        use_amp: Optional[bool] = None,
     ):
         self.method = method
         self.alpha = alpha
@@ -242,6 +246,7 @@ class OTNSWOptimizer(BaseOptimizer):
         self.last_ot_n_iter = last_ot_n_iter
         self.tol = tol
         self.device = device
+        self.use_amp = use_amp
 
     def solve(self, rel_mat: NDArray[np.float_], expo: NDArray[np.float_]) -> NDArray[np.float_]:
         n_doc = rel_mat.shape[1]
@@ -257,6 +262,7 @@ class OTNSWOptimizer(BaseOptimizer):
                 self.last_ot_n_iter,
                 self.tol,
                 self.device,
+                self.use_amp,
             )
         elif self.method == "pg_ot":
             return compute_pi_pg_ot_nsw(
@@ -284,6 +290,7 @@ class ClusteredOTNSWOptimizer(BaseClusteredOptimizer):
         last_ot_n_iter: int = 100,
         tol: float = 1e-6,
         device: str = "cpu",
+        use_amp: Optional[bool] = None,
         random_state: int = 12345,
     ):
         super().__init__(n_doc_cluster, n_query_cluster, random_state)
@@ -294,6 +301,7 @@ class ClusteredOTNSWOptimizer(BaseClusteredOptimizer):
         self.last_ot_n_iter = last_ot_n_iter
         self.tol = tol
         self.device = device
+        self.use_amp = use_amp
 
     def _solve(
         self, rel_mat: NDArray[np.float_], expo: NDArray[np.float_], high: NDArray[np.float_]
@@ -309,6 +317,7 @@ class ClusteredOTNSWOptimizer(BaseClusteredOptimizer):
                 self.last_ot_n_iter,
                 self.tol,
                 self.device,
+                self.use_amp,
             )
         elif self.method == "pg_ot":
             return compute_pi_pg_ot_nsw(
@@ -321,6 +330,7 @@ class ClusteredOTNSWOptimizer(BaseClusteredOptimizer):
                 self.last_ot_n_iter,
                 self.tol,
                 self.device,
+                self.use_amp,
             )
 
 
