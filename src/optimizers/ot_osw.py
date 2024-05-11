@@ -82,7 +82,7 @@ def compute_pi_ot_nsw(
     tol: float = 1e-6,
     device: str = "cpu",
     use_amp: Optional[bool] = None,
-) -> NDArray[np.float_]:
+) -> tuple[NDArray[np.float_], dict[str, list[float]]]:
     """_description_
 
     Args:
@@ -119,7 +119,10 @@ def compute_pi_ot_nsw(
     if use_amp is None:
         use_amp = True if device == "cuda" else False
     scaler = GradScaler(enabled=use_amp)
-
+    history: dict[str, list[float]] = {
+        "loss": [],
+        "grad_norm": [],
+    }
     for _ in tqdm(range(max_iter)):
         optimier.zero_grad()
         with autocast(enabled=use_amp):
@@ -135,8 +138,12 @@ def compute_pi_ot_nsw(
         if grad_norm < tol:
             break
 
+        history["loss"].append(loss.item())
+        history["grad_norm"].append(grad_norm.item())
+
     pi: NDArray[np.float_] = X[:, :, :-1].detach().cpu().numpy()
-    return pi
+
+    return pi, history
 
 
 def compute_pi_pg_ot_nsw(
@@ -151,7 +158,7 @@ def compute_pi_pg_ot_nsw(
     tol: float = 1e-6,
     device: str = "cpu",
     use_amp: Optional[bool] = None,
-) -> NDArray[np.float_]:
+) -> tuple[NDArray[np.float_], dict[str, list[float]]]:
     """_description_
 
     Args:
@@ -189,7 +196,10 @@ def compute_pi_pg_ot_nsw(
     if use_amp is None:
         use_amp = True if device == "cuda" else False
     scaler = GradScaler(enabled=use_amp)
-    losses = []
+    history: dict[str, list[float]] = {
+        "loss": [],
+        "grad_norm": [],
+    }
 
     for iter in tqdm(range(max_iter)):
         optimier.zero_grad()
@@ -212,10 +222,12 @@ def compute_pi_pg_ot_nsw(
         if grad_norm < tol:
             break
 
-        losses.append((loss.item(), grad_norm.item()))
+        history["loss"].append(loss.item())
+        history["grad_norm"].append(grad_norm.item())
 
     pi: NDArray[np.float_] = X[:, :, :-1].detach().cpu().numpy()
-    return pi
+
+    return pi, history
 
 
 class OTNSWOptimizer(BaseOptimizer):
@@ -245,7 +257,7 @@ class OTNSWOptimizer(BaseOptimizer):
         n_doc = rel_mat.shape[1]
         high = np.ones(n_doc)
         if self.method == "ot":
-            return compute_pi_ot_nsw(
+            pi, _ = compute_pi_ot_nsw(
                 rel_mat,
                 expo,
                 high,
@@ -258,8 +270,9 @@ class OTNSWOptimizer(BaseOptimizer):
                 self.device,
                 self.use_amp,
             )
+            return pi
         elif self.method == "pg_ot":
-            return compute_pi_pg_ot_nsw(
+            pi, _ = compute_pi_pg_ot_nsw(
                 rel_mat,
                 expo,
                 high,
@@ -271,6 +284,7 @@ class OTNSWOptimizer(BaseOptimizer):
                 self.tol,
                 self.device,
             )
+            return pi
         else:
             raise ValueError(f"Invalid method: {self.method}")
 
@@ -306,7 +320,7 @@ class ClusteredOTNSWOptimizer(BaseClusteredOptimizer):
         self, rel_mat: NDArray[np.float_], expo: NDArray[np.float_], high: NDArray[np.float_]
     ) -> NDArray[np.float_]:
         if self.method == "ot":
-            return compute_pi_ot_nsw(
+            pi, _ = compute_pi_ot_nsw(
                 rel_mat,
                 expo,
                 high,
@@ -319,8 +333,9 @@ class ClusteredOTNSWOptimizer(BaseClusteredOptimizer):
                 self.device,
                 self.use_amp,
             )
+            return pi
         elif self.method == "pg_ot":
-            return compute_pi_pg_ot_nsw(
+            pi, _ = compute_pi_pg_ot_nsw(
                 rel_mat,
                 expo,
                 high,
@@ -333,6 +348,7 @@ class ClusteredOTNSWOptimizer(BaseClusteredOptimizer):
                 self.device,
                 self.use_amp,
             )
+            return pi
         else:
             raise ValueError(f"Invalid method: {self.method}")
 
