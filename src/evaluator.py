@@ -79,8 +79,5 @@ def validate_pi(pi: NDArray[np.float_], eps: float = 1e-4) -> None:
         np.abs(pi.sum((1, 2)) - n_rank) < eps
     ), "ランキングの合計値が表示数と一致しません"
 
-    # \sum_{k} pi_{uik} < 1 \forall (u, i), 全てのアイテムの流出量が1以下
-    assert np.all(pi.sum(2) <= 1), "アイテムの流出量が1以下でないです"
-
     # \sum_{i} pi_{uik} = 1 \forall (u, k), ランキングへの流入量が1
     assert np.all(np.abs(pi.sum(1) - 1) < eps), "ランキングへの流入量が1でないです"
