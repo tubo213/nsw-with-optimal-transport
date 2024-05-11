@@ -1,6 +1,10 @@
+from dataclasses import dataclass, field
 from typing import Any, Literal, Optional
 
+import japanize_matplotlib  # noqa: F401
+import matplotlib.pyplot as plt
 import numpy as np
+import seaborn as sns
 import torch
 import torch.nn as nn
 from numpy.typing import NDArray
@@ -70,6 +74,65 @@ def compute_nsw_loss(
     return -(am_rel * torch.log(imp + eps)).sum()
 
 
+@dataclass
+class History:
+    pi_stock_size: int
+    loss: list[float] = field(default_factory=list)
+    grad_norm: list[float] = field(default_factory=list)
+    pi: list[NDArray[np.float_]] = field(default_factory=list)
+
+    @property
+    def is_within_pi_stock_size(self) -> bool:
+        return len(self.pi) < self.pi_stock_size
+
+    def append(self, loss: float, grad_norm: float) -> None:
+        self.loss.append(loss)
+        self.grad_norm.append(grad_norm)
+
+    def append_pi(self, pi: NDArray[np.float_]) -> None:
+        self.pi.append(pi)
+
+    def plot_loss_curve(self) -> None:
+        plt.figure()
+        plt.plot(self.loss)
+        plt.xlabel("Iteration")
+        plt.ylabel("Loss")
+
+    def plot_grad_norm_curve(self) -> None:
+        plt.figure()
+        plt.plot(self.grad_norm)
+        plt.xlabel("Iteration")
+        plt.ylabel("Grad norm")
+
+    def plot_pi_by_iteration(self, n_col: int = 5, plot_dummy: bool = True) -> None:
+        n_row = len(self.pi) // n_col
+        if len(self.pi) % n_col != 0:
+            n_row += 1
+        fig, axes = plt.subplots(n_row, n_col, figsize=(5 * n_col, 5 * n_row))
+        axes: list[plt.Axes] = np.ravel(axes).tolist()
+        for i in range(len(self.pi)):
+            ax = axes[i]
+            pi = self.pi[i] if plot_dummy else self.pi[i][:, :-1]
+            sns.heatmap(
+                pi,
+                annot=False,
+                fmt=".1f",
+                cmap="Blues",
+                ax=ax,
+                vmin=0,
+                vmax=1,
+                cbar=True if i == 0 else False,
+            )
+            ax.set_title(f"イテレーション {i}")
+            ax.set_xlabel("表示位置")
+            ax.set_ylabel("アイテム")
+            if plot_dummy:
+                # xメモリの一番最後をdummyに変更
+                ax.set_xticklabels([f"{i}" for i in range(self.pi[i].shape[1] - 1)] + ["dummy"])
+
+        fig.tight_layout()
+
+
 def compute_pi_ot_nsw(
     rel_mat: NDArray[np.float_],
     expo: NDArray[np.float_],
@@ -82,7 +145,8 @@ def compute_pi_ot_nsw(
     tol: float = 1e-6,
     device: str = "cpu",
     use_amp: Optional[bool] = None,
-) -> tuple[NDArray[np.float_], dict[str, list[float]]]:
+    pi_stock_size: int = 10,
+) -> tuple[NDArray[np.float_], History]:
     """_description_
 
     Args:
@@ -119,10 +183,7 @@ def compute_pi_ot_nsw(
     if use_amp is None:
         use_amp = True if device == "cuda" else False
     scaler = GradScaler(enabled=use_amp)
-    history: dict[str, list[float]] = {
-        "loss": [],
-        "grad_norm": [],
-    }
+    history = History(pi_stock_size=pi_stock_size)
     for _ in tqdm(range(max_iter)):
         optimier.zero_grad()
         with autocast(enabled=use_amp):
@@ -138,8 +199,9 @@ def compute_pi_ot_nsw(
         if grad_norm < tol:
             break
 
-        history["loss"].append(loss.item())
-        history["grad_norm"].append(grad_norm.item())
+        history.append(loss.item(), grad_norm.item())
+        if history.is_within_pi_stock_size:
+            history.append_pi(X.data[0].clone().detach().cpu().numpy())
 
     pi: NDArray[np.float_] = X[:, :, :-1].detach().cpu().numpy()
 
@@ -151,6 +213,7 @@ def compute_pi_pg_ot_nsw(
     expo: NDArray[np.float_],
     high: NDArray[np.float_],
     alpha: float = 0.0,
+    apply_negative_to_X_bf_sa: bool = False,
     eps: float = 0.01,
     lr: float = 0.01,
     max_iter: int = 200,
@@ -158,7 +221,8 @@ def compute_pi_pg_ot_nsw(
     tol: float = 1e-6,
     device: str = "cpu",
     use_amp: Optional[bool] = None,
-) -> tuple[NDArray[np.float_], dict[str, list[float]]]:
+    pi_stock_size: int = 10,
+) -> tuple[NDArray[np.float_], History]:
     """_description_
 
     Args:
@@ -191,15 +255,14 @@ def compute_pi_pg_ot_nsw(
 
     # 初期値は一様分布
     # 表示数 < アイテム数の場合にはダミー列に輸送されるようにする
-    X = nn.Parameter(torch.rand(n_query, n_doc, n_rank + 1).to(device) / n_doc)
+    X = nn.Parameter(torch.ones(n_query, n_doc, n_rank + 1).to(device) / n_doc)
     optimier = torch.optim.Adam([X], lr=lr)
     if use_amp is None:
         use_amp = True if device == "cuda" else False
     scaler = GradScaler(enabled=use_amp)
-    history: dict[str, list[float]] = {
-        "loss": [],
-        "grad_norm": [],
-    }
+    history: History = History(pi_stock_size)
+    if history.is_within_pi_stock_size:
+        history.append_pi(X.data[0].clone().detach().cpu().numpy())
 
     for iter in tqdm(range(max_iter)):
         optimier.zero_grad()
@@ -216,14 +279,17 @@ def compute_pi_pg_ot_nsw(
         # シンクホーンアルゴリズムで実行可能領域に射影
         with autocast(enabled=use_amp):
             with torch.no_grad():
-                X.data = sinkhorn((-X), a, b, n_iter=ot_n_iter, eps=eps)
+                if apply_negative_to_X_bf_sa:
+                    X.data = -X.data
+                X.data = sinkhorn(X, a, b, n_iter=ot_n_iter, eps=eps)
 
         # gradient normが一定以下になったら終了
         if grad_norm < tol:
             break
 
-        history["loss"].append(loss.item())
-        history["grad_norm"].append(grad_norm.item())
+        history.append(loss.item(), grad_norm.item())
+        if history.is_within_pi_stock_size:
+            history.append_pi(X.data[0].clone().detach().cpu().numpy())
 
     pi: NDArray[np.float_] = X[:, :, :-1].detach().cpu().numpy()
 
@@ -242,6 +308,7 @@ class OTNSWOptimizer(BaseOptimizer):
         tol: float = 1e-6,
         device: str = "cpu",
         use_amp: Optional[bool] = None,
+        apply_negative_to_X_bf_sa: Optional[bool] = None,
     ):
         self.method = method
         self.alpha = alpha
@@ -252,6 +319,13 @@ class OTNSWOptimizer(BaseOptimizer):
         self.tol = tol
         self.device = device
         self.use_amp = use_amp
+        self.apply_negative_to_X_bf_sa = apply_negative_to_X_bf_sa
+        if (method == "ot") and (apply_negative_to_X_bf_sa is not None):
+            Warning("apply_negative_to_X_bf_sa is not used in ot method")
+        if (method == "pg_ot") and (apply_negative_to_X_bf_sa is None):
+            Warning(
+                "apply_negative_to_X_bf_sa is set to False because it is None and method is pg_ot"
+            )
 
     def solve(self, rel_mat: NDArray[np.float_], expo: NDArray[np.float_]) -> NDArray[np.float_]:
         n_doc = rel_mat.shape[1]
@@ -269,20 +343,28 @@ class OTNSWOptimizer(BaseOptimizer):
                 self.tol,
                 self.device,
                 self.use_amp,
+                pi_stock_size=0,
             )
             return pi
         elif self.method == "pg_ot":
+            if self.apply_negative_to_X_bf_sa is None:
+                apply_negative_to_X_bf_sa = False
+                Warning("apply_negative_to_X_bf_sa is set to False because it is None")
+            else:
+                apply_negative_to_X_bf_sa = self.apply_negative_to_X_bf_sa
             pi, _ = compute_pi_pg_ot_nsw(
                 rel_mat,
                 expo,
                 high,
                 self.alpha,
+                apply_negative_to_X_bf_sa,
                 self.eps,
                 self.lr,
                 self.max_iter,
                 self.ot_n_iter,
                 self.tol,
                 self.device,
+                pi_stock_size=0,
             )
             return pi
         else:
@@ -296,6 +378,7 @@ class ClusteredOTNSWOptimizer(BaseClusteredOptimizer):
         n_query_cluster: int,
         method: METHOD = "ot",
         alpha: float = 0.0,
+        apply_negative_to_X_bf_sa: Optional[bool] = None,
         eps: float = 1,
         lr: float = 0.01,
         max_iter: int = 200,
@@ -315,6 +398,13 @@ class ClusteredOTNSWOptimizer(BaseClusteredOptimizer):
         self.tol = tol
         self.device = device
         self.use_amp = use_amp
+        self.apply_negative_to_X_bf_sa = apply_negative_to_X_bf_sa
+        if (method == "ot") and (apply_negative_to_X_bf_sa is not None):
+            Warning("apply_negative_to_X_bf_sa is not used in ot method")
+        if (method == "pg_ot") and (apply_negative_to_X_bf_sa is None):
+            Warning(
+                "apply_negative_to_X_bf_sa is set to False because it is None and method is pg_ot"
+            )
 
     def _solve(
         self, rel_mat: NDArray[np.float_], expo: NDArray[np.float_], high: NDArray[np.float_]
@@ -332,14 +422,21 @@ class ClusteredOTNSWOptimizer(BaseClusteredOptimizer):
                 self.tol,
                 self.device,
                 self.use_amp,
+                pi_stock_size=0,
             )
             return pi
         elif self.method == "pg_ot":
+            if self.apply_negative_to_X_bf_sa is None:
+                apply_negative_to_X_bf_sa = False
+                Warning("apply_negative_to_X_bf_sa is set to False because it is None")
+            else:
+                apply_negative_to_X_bf_sa = self.apply_negative_to_X_bf_sa
             pi, _ = compute_pi_pg_ot_nsw(
                 rel_mat,
                 expo,
                 high,
                 self.alpha,
+                apply_negative_to_X_bf_sa,
                 self.eps,
                 self.lr,
                 self.max_iter,
@@ -347,6 +444,7 @@ class ClusteredOTNSWOptimizer(BaseClusteredOptimizer):
                 self.tol,
                 self.device,
                 self.use_amp,
+                pi_stock_size=0,
             )
             return pi
         else:
