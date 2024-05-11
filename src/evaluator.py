@@ -22,6 +22,9 @@ def compute_item_utils_unif(
 def evaluate_pi(
     pi: NDArray[np.float_], rel_mat: NDArray[np.float_], v: NDArray[np.float_]
 ) -> dict[str, float]:
+    # piの制約を満たしているかチェック
+    validate_pi(pi)
+
     n_query, n_doc = rel_mat.shape
     expo_mat = (pi * v.T).sum(2)
     click_mat: NDArray[np.float_] = rel_mat * expo_mat
@@ -50,3 +53,34 @@ def evaluate_pi(
         "pct_item_util_better": pct_item_util_better,
         "pct_item_util_worse": pct_item_util_worse,
     }
+
+
+def validate_pi(pi: NDArray[np.float_], eps: float = 1e-4) -> None:
+    """Validate the probability matrix pi.
+
+    This function checks if the given probability matrix pi satisfies certain conditions.
+
+    Args:
+        pi (NDArray[np.float_]): The probability matrix to be validated. (n_query, n_doc, n_rank)
+        eps (float, optional): The tolerance for floating-point comparisons. Defaults to 1e-5.
+
+    Raises:
+        AssertionError: If any of the validation conditions are not met.
+    """
+    # piにnanが含まれていない
+    assert not np.isnan(pi).any(), "piにnanが含まれています"
+
+    # 0 <= pi_{uik} <= 1 \forall (u, i, k), piの全ての要素が0以上1以下
+    assert np.all((0 <= pi) & (pi <= 1)), "piの全ての要素が0以上1以下でないです"
+
+    # \sum_{i} \sum_{k} pi_{uik} = n_rank \forall u, ランキングの合計値が表示数と一致
+    n_rank = pi.shape[2]
+    assert np.all(
+        np.abs(pi.sum((1, 2)) - n_rank) < eps
+    ), "ランキングの合計値が表示数と一致しません"
+
+    # \sum_{k} pi_{uik} < 1 \forall (u, i), 全てのアイテムの流出量が1以下
+    assert np.all(pi.sum(2) <= 1), "アイテムの流出量が1以下でないです"
+
+    # \sum_{i} pi_{uik} = 1 \forall (u, k), ランキングへの流入量が1
+    assert np.all(np.abs(pi.sum(1) - 1) < eps), "ランキングへの流入量が1でないです"
