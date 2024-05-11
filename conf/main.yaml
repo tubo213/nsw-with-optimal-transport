@@ -12,7 +12,7 @@ hydra:
 defaults:
   - _self_
   - optimizer: nsw
-  - generator: size1
+  - generator: base_size
 
 exp_name: dummy
 seed: 0
