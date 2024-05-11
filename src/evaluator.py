@@ -22,6 +22,20 @@ def compute_item_utils_unif(
 def evaluate_pi(
     pi: NDArray[np.float_], rel_mat: NDArray[np.float_], v: NDArray[np.float_]
 ) -> dict[str, float]:
+    """Evaluate the given probability matrix pi.
+
+    Args:
+        pi (NDArray[np.float_]): The probability matrix to be evaluated. (n_query, n_doc, n_rank)
+        rel_mat (NDArray[np.float_]): The true relevance matrix. (n_query, n_doc)
+        v (NDArray[np.float_]): The exposure vector. (n_rank, 1)
+
+    Returns:
+        dict[str, float]: A dictionary containing the evaluation metrics.
+
+    References:
+        - This function is adapted from `evaluate_pi` at [https://github.com/usaito/kdd2022-fair-ranking-nsw/blob/main/src/synthetic/func.py] by yuta-saito.
+        - MIT License, Copyright (c) 2022 yuta-saito. See the original repository for full license information.
+    """
     # piの制約を満たしているかチェック
     validate_pi(pi)
 

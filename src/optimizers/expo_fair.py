@@ -27,6 +27,10 @@ def compute_pi_expo_fair(
 
     Returns:
         NDArray[np.float_]: The allocation matrix pi of shape (n_query, n_doc, K).
+
+    References:
+        - This function is adapted from `compute_pi_expo_fair` at [https://github.com/usaito/kdd2022-fair-ranking-nsw/blob/main/src/synthetic/func.py] by yuta-saito.
+        - MIT License, Copyright (c) 2022 yuta-saito. See the original repository for full license information.
     """
     n_query, n_doc = rel_mat.shape
     K = expo.shape[0]
