@@ -12,13 +12,10 @@ class OptimizerConfig:
 
 @dataclass
 class GeneratorConfig:
-    n_query: int
-    n_doc: int
-    lam: float
-    flip_ratio: float
-    noise: float
+    name: str
+    params: dict[str, Any]
     K: int
-    shape: Literal["inv", "exp", "log"]
+    shape: Literal["inv", "exp"]
 
 
 @dataclass

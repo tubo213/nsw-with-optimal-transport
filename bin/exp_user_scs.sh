@@ -3,5 +3,5 @@ rye run python main.py -m \
     generator=base_size_user \
     optimizer=expo_fair,nsw \
     optimizer.params.solver=SCS \
-    generator.n_query=50,100,200,400,800,1600 \
+    generator.params.n_query=50,100,200,400 \
     seed=0,1,2,3,4

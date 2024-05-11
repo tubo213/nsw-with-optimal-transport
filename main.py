@@ -7,7 +7,7 @@ from loguru import logger
 from pytorch_lightning import seed_everything
 from ttimer import get_timer
 
-from src import Config, create_optimizer, evaluate_pi, exam_func, synthesize_rel_mat
+from src import Config, create_generator, create_optimizer, evaluate_pi
 
 
 @hydra.main(config_path="conf", config_name="main", version_base="1.2")
@@ -21,15 +21,9 @@ def main(cfg: Config) -> None:
     # generate data
     seed_everything(cfg.seed)
     generator_cfg = cfg.generator
-    rel_mat_true, rel_mat_obs = synthesize_rel_mat(
-        generator_cfg.n_query,
-        generator_cfg.n_doc,
-        generator_cfg.lam,
-        generator_cfg.flip_ratio,
-        generator_cfg.noise,
-        cfg.seed,
-    )
-    expo = exam_func(generator_cfg.K, generator_cfg.shape)
+    generator = create_generator(generator_cfg.name, **generator_cfg.params)
+    rel_mat_true, rel_mat_obs = generator.generate_rel_mat()
+    expo = generator.exam_func(generator_cfg.K, generator_cfg.shape)
 
     # solve
     optimizer = create_optimizer(cfg.optimizer.name, **cfg.optimizer.params)

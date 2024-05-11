@@ -17,6 +17,22 @@ def compute_nsw(
     alpha: float = 0,
     solver: Optional[str] = None,
 ) -> NDArray[np.float_]:
+    """_summary_
+
+    Args:
+        rel_mat (NDArray[np.float_]): _description_
+        expo (NDArray[np.float_]): _description_
+        high (NDArray[np.float_]): _description_
+        alpha (float, optional): _description_. Defaults to 0.
+        solver (Optional[str], optional): _description_. Defaults to None.
+
+    Returns:
+        NDArray[np.float_]: _description_
+
+    References:
+        - This function is adapted from `compute_pi_nsw` at [https://github.com/usaito/kdd2022-fair-ranking-nsw/blob/main/src/synthetic/func.py] by yuta-saito.
+        - MIT License, Copyright (c) 2022 yuta-saito. See the original repository for full license information.
+    """
     n_query, n_doc = rel_mat.shape
     K = expo.shape[0]
     query_basis = np.ones((n_query, 1))
