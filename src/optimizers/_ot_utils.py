@@ -6,7 +6,7 @@ import numpy as np
 import seaborn as sns
 import torch
 from numpy.typing import NDArray
-
+from matplotlib.axes import Axes
 
 def sinkhorn(
     C: torch.Tensor, a: torch.Tensor, b: torch.Tensor, n_iter: int = 15, eps: float = 0.1
@@ -170,7 +170,7 @@ class History:
         if len(self.pi) % n_col != 0:
             n_row += 1
         fig, axes = plt.subplots(n_row, n_col, figsize=(5 * n_col, 5 * n_row))
-        axes: list[plt.Axes] = np.ravel(axes).tolist()
+        axes: list[Axes] = np.ravel(axes).tolist()
         for i in range(len(self.pi)):
             ax = axes[i]
             pi = self.pi[i] if plot_dummy else self.pi[i][:, :-1]
