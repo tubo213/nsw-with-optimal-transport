@@ -5,8 +5,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 import torch
-from numpy.typing import NDArray
 from matplotlib.axes import Axes
+from numpy.typing import NDArray
+
 
 def sinkhorn(
     C: torch.Tensor, a: torch.Tensor, b: torch.Tensor, n_iter: int = 15, eps: float = 0.1
