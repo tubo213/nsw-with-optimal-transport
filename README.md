@@ -51,6 +51,24 @@ rye sync
 . .venv/bin/activate
 ```
 
+## Datasets
+
+(This explanation is based on the repository of the [kdd2022-fair-ranking-nsw](https://github.com/usaito/kdd2022-fair-ranking-nsw/tree/main) by yuta-saito)
+
+We use "Delicious" and "Wiki10-31K" from The Extreme Classification Repository. Please install the above datasets from the repository and put them under the ./data/ as follows.
+
+```
+root/
+├── data
+│   ├── delicious.txt
+│   └── wiki.txt
+```
+
+Note that we rename the files as follows:
+- Delicious_data.txt in Delicious.zip to delicious.txt
+- train.txt in Wiki10.bow.zip to wiki.txt , respectively.
+
+
 ## Run Experiment
 
 Before running an experiment, you need register wandb.
