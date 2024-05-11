@@ -1,0 +1,11 @@
+name: pgd_nsw
+params:
+  alpha: 0.0
+  apply_negative_to_X_bf_sa: True
+  eps: 0.05
+  lr: 0.5
+  max_iter: 100
+  ot_n_iter: 20
+  tol: 0.01
+  device: cuda
+  use_amp: false
