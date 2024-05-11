@@ -1,4 +1,4 @@
-.PHONY: format lint lint-mypy run_all
+.PHONY: format lint run_all
 
 # ruffでフォーマットを行う
 format:
@@ -6,11 +6,7 @@ format:
 
 # ruffでlintとフォーマットを行う
 lint:
-	rye run ruff check --fix
-
-# mypyで型チェックを行う
-lint-mypy:
-	rye run mypy . --config-file pyproject.toml
+	rye run ruff check --fix; rye run mypy . --config-file pyproject.toml
 
 # bin配下のシェルスクリプトを全て実行する
 run_all:
