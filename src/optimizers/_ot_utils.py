@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 import torch
+from matplotlib.axes import Axes
 from numpy.typing import NDArray
 
 
@@ -170,7 +171,7 @@ class History:
         if len(self.pi) % n_col != 0:
             n_row += 1
         fig, axes = plt.subplots(n_row, n_col, figsize=(5 * n_col, 5 * n_row))
-        axes: list[plt.Axes] = np.ravel(axes).tolist()
+        axes: list[Axes] = np.ravel(axes).tolist()
         for i in range(len(self.pi)):
             ax = axes[i]
             pi = self.pi[i] if plot_dummy else self.pi[i][:, :-1]
