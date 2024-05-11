@@ -20,7 +20,7 @@ class BaseGenerator(ABC):
         raise NotImplementedError
 
     @staticmethod
-    def exam_func(K: int, shape: Literal["inv", "exp"]="inv") -> NDArray[np.float_]:
+    def exam_func(K: int, shape: Literal["inv", "exp"] = "inv") -> NDArray[np.float_]:
         if shape == "inv":
             v = np.ones(K) / np.arange(1, K + 1)
         elif shape == "exp":
