@@ -1,4 +1,4 @@
-.PHONY: format lint run_all
+.PHONY: format lint run-all
 
 # ruffでフォーマットを行う
 format:
@@ -9,5 +9,10 @@ lint:
 	rye run ruff check --fix; rye run mypy . --config-file pyproject.toml
 
 # bin配下のシェルスクリプトを全て実行する
-run_all:
-	@find bin -type f -name "*.sh" -exec chmod +x {} \; -exec {} \;
+run-all:
+	@echo "The following scripts will be executed in sorted order:"
+	@find bin -type f -name "*.sh" | sort
+	@for script in $$(find bin -type f -name "*.sh" | sort); do \
+		echo "Executing $$script..."; \
+		bash ./$$script; \
+	done
