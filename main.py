@@ -1,10 +1,11 @@
-import time
 from pathlib import Path
 
 import hydra
 import omegaconf
 import wandb
+from loguru import logger
 from pytorch_lightning import seed_everything
+from ttimer import get_timer
 
 from src import Config, create_optimizer, evaluate_pi, exam_func, synthesize_rel_mat
 
@@ -32,14 +33,16 @@ def main(cfg: Config) -> None:
 
     # solve
     optimizer = create_optimizer(cfg.optimizer.name, **cfg.optimizer.params)
-    t0 = time.perf_counter()
-    pi = optimizer.solve(rel_mat_obs, expo)
-    exec_time = time.perf_counter() - t0
+    timer = get_timer(timer_name="optimization")
+    with timer(name="solve"):
+        pi = optimizer.solve(rel_mat_obs, expo)
+    exec_time = timer["solve"].time
+    logger.info(f"\n{timer.render()}")
 
     # evaluate
     result = evaluate_pi(pi, rel_mat_true, expo)
     result["exec_time"] = exec_time
-    print(result)
+    logger.info(result)
 
     # log
     wandb.log(result)
