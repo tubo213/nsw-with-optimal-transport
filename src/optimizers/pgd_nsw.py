@@ -71,7 +71,7 @@ def compute_pi_pgd_nsw(
     if history.is_within_pi_stock_size:
         history.append_pi(X.data[0].clone().detach().cpu().numpy())
 
-    for iter in tqdm(range(max_iter)):
+    for iter in tqdm(range(max_iter), leave=False):
         optimier.zero_grad()
         with autocast(enabled=use_amp):
             # 損失を計算
@@ -108,10 +108,10 @@ class PGDNSWOptimizer(BaseOptimizer):
         self,
         alpha: float = 0.0,
         apply_negative_to_X_bf_sa: bool = True,
-        eps: float = 1,
+        eps: float = 0.01,
         lr: float = 0.01,
         max_iter: int = 200,
-        ot_n_iter: int = 50,
+        ot_n_iter: int = 30,
         tol: float = 1e-6,
         device: str = "cpu",
         use_amp: Optional[bool] = None,
@@ -130,17 +130,18 @@ class PGDNSWOptimizer(BaseOptimizer):
         n_doc = rel_mat.shape[1]
         high = np.ones(n_doc)
         pi, _ = compute_pi_pgd_nsw(
-            rel_mat,
-            expo,
-            high,
-            self.alpha,
-            self.apply_negative_to_X_bf_sa,
-            self.eps,
-            self.lr,
-            self.max_iter,
-            self.ot_n_iter,
-            self.tol,
-            self.device,
+            rel_mat=rel_mat,
+            expo=expo,
+            high=high,
+            alpha=self.alpha,
+            apply_negative_to_X_bf_sa=self.apply_negative_to_X_bf_sa,
+            eps=self.eps,
+            lr=self.lr,
+            max_iter=self.max_iter,
+            ot_n_iter=self.ot_n_iter,
+            tol=self.tol,
+            device=self.device,
+            use_amp=self.use_amp,
             pi_stock_size=0,
         )
         return pi
@@ -177,18 +178,18 @@ class ClusteredPGDNSWOptimizer(BaseClusteredOptimizer):
         self, rel_mat: NDArray[np.float_], expo: NDArray[np.float_], high: NDArray[np.float_]
     ) -> NDArray[np.float_]:
         pi, _ = compute_pi_pgd_nsw(
-            rel_mat,
-            expo,
-            high,
-            self.alpha,
-            self.apply_negative_to_X_bf_sa,
-            self.eps,
-            self.lr,
-            self.max_iter,
-            self.ot_n_iter,
-            self.tol,
-            self.device,
-            self.use_amp,
+            rel_mat=rel_mat,
+            expo=expo,
+            high=high,
+            alpha=self.alpha,
+            apply_negative_to_X_bf_sa=self.apply_negative_to_X_bf_sa,
+            eps=self.eps,
+            lr=self.lr,
+            max_iter=self.max_iter,
+            ot_n_iter=self.ot_n_iter,
+            tol=self.tol,
+            device=self.device,
+            use_amp=self.use_amp,
             pi_stock_size=0,
         )
         return pi
@@ -200,5 +201,5 @@ def pgd_nsw(**kwargs: Any) -> PGDNSWOptimizer:
 
 
 @register_optimizer
-def clustered_pgd_nsw(**kwargs: Any) -> PGDNSWOptimizer:
-    return PGDNSWOptimizer(**kwargs)
+def clustered_pgd_nsw(**kwargs: Any) -> ClusteredPGDNSWOptimizer:
+    return ClusteredPGDNSWOptimizer(**kwargs)

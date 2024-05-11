@@ -66,10 +66,10 @@ def compute_pi_ot_nsw(
         use_amp = True if device == "cuda" else False
     scaler = GradScaler(enabled=use_amp)
     history = History(pi_stock_size=pi_stock_size)
-    for _ in tqdm(range(max_iter)):
+    for _ in tqdm(range(max_iter), leave=False):
         optimier.zero_grad()
         with autocast(enabled=use_amp):
-            # compute pi
+            # compute X
             X: torch.Tensor = sinkhorn(C, a, b, n_iter=ot_n_iter, eps=eps)
             loss = compute_nsw_loss(X[:, :, :-1], click_prob, am_rel)
         scaler.scale(loss).backward()
@@ -94,10 +94,10 @@ class OTNSWOptimizer(BaseOptimizer):
     def __init__(
         self,
         alpha: float = 0.0,
-        eps: float = 1,
+        eps: float = 0.01,
         lr: float = 0.01,
         max_iter: int = 200,
-        ot_n_iter: int = 50,
+        ot_n_iter: int = 30,
         tol: float = 1e-6,
         device: str = "cpu",
         use_amp: Optional[bool] = None,
@@ -115,17 +115,17 @@ class OTNSWOptimizer(BaseOptimizer):
         n_doc = rel_mat.shape[1]
         high = np.ones(n_doc)
         pi, _ = compute_pi_ot_nsw(
-            rel_mat,
-            expo,
-            high,
-            self.alpha,
-            self.eps,
-            self.lr,
-            self.max_iter,
-            self.ot_n_iter,
-            self.tol,
-            self.device,
-            self.use_amp,
+            rel_mat=rel_mat,
+            expo=expo,
+            high=high,
+            alpha=self.alpha,
+            eps=self.eps,
+            lr=self.lr,
+            max_iter=self.max_iter,
+            ot_n_iter=self.ot_n_iter,
+            tol=self.tol,
+            device=self.device,
+            use_amp=self.use_amp,
             pi_stock_size=0,
         )
         return pi
@@ -136,15 +136,15 @@ class ClusteredOTNSWOptimizer(BaseClusteredOptimizer):
         self,
         n_doc_cluster: int,
         n_query_cluster: int,
+        random_state: int = 12345,
         alpha: float = 0.0,
-        eps: float = 1,
+        eps: float = 0.01,
         lr: float = 0.01,
         max_iter: int = 200,
-        ot_n_iter: int = 50,
+        ot_n_iter: int = 30,
         tol: float = 1e-6,
         device: str = "cpu",
         use_amp: Optional[bool] = None,
-        random_state: int = 12345,
     ):
         super().__init__(n_doc_cluster, n_query_cluster, random_state)
         self.alpha = alpha
@@ -160,17 +160,17 @@ class ClusteredOTNSWOptimizer(BaseClusteredOptimizer):
         self, rel_mat: NDArray[np.float_], expo: NDArray[np.float_], high: NDArray[np.float_]
     ) -> NDArray[np.float_]:
         pi, _ = compute_pi_ot_nsw(
-            rel_mat,
-            expo,
-            high,
-            self.alpha,
-            self.eps,
-            self.lr,
-            self.max_iter,
-            self.ot_n_iter,
-            self.tol,
-            self.device,
-            self.use_amp,
+            rel_mat=rel_mat,
+            expo=expo,
+            high=high,
+            alpha=self.alpha,
+            eps=self.eps,
+            lr=self.lr,
+            max_iter=self.max_iter,
+            ot_n_iter=self.ot_n_iter,
+            tol=self.tol,
+            device=self.device,
+            use_amp=self.use_amp,
             pi_stock_size=0,
         )
         return pi
