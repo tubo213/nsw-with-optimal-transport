@@ -1,3 +1,4 @@
+import time
 from pathlib import Path
 
 import hydra
@@ -5,7 +6,6 @@ import omegaconf
 import wandb
 from loguru import logger
 from pytorch_lightning import seed_everything
-from ttimer import get_timer
 
 from src import Config, create_generator, create_optimizer, evaluate_pi
 
@@ -24,14 +24,15 @@ def main(cfg: Config) -> None:
     generator = create_generator(generator_cfg.name, **generator_cfg.params)
     rel_mat_true, rel_mat_obs = generator.generate_rel_mat()
     expo = generator.exam_func(generator_cfg.K, generator_cfg.shape)
+    logger.info(f"n_query: {rel_mat_obs.shape[0]}, n_doc: {rel_mat_obs.shape[1]}")
+    logger.info(f"n_rank: {expo.shape[0]}")
 
     # solve
     optimizer = create_optimizer(cfg.optimizer.name, **cfg.optimizer.params)
-    timer = get_timer(timer_name="optimization")
-    with timer(name="solve"):
-        pi = optimizer.solve(rel_mat_obs, expo)
-    exec_time = timer["solve"].time
-    logger.info(f"\n{timer.render()}")
+    t0 = time.perf_counter()
+    pi = optimizer.solve(rel_mat_obs, expo)
+    exec_time = time.perf_counter() - t0
+    logger.info(f"exec_time: {exec_time:.2f} sec")
 
     # evaluate
     result = evaluate_pi(pi, rel_mat_true, expo)
