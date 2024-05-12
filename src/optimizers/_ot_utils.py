@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 import japanize_matplotlib  # noqa: F401
 import matplotlib.pyplot as plt
@@ -10,7 +10,12 @@ from numpy.typing import NDArray
 
 
 def sinkhorn(
-    C: torch.Tensor, a: torch.Tensor, b: torch.Tensor, n_iter: int = 15, eps: float = 0.1
+    C: torch.Tensor,
+    a: torch.Tensor,
+    b: torch.Tensor,
+    n_iter: int = 15,
+    eps: float = 0.1,
+    apply_kernel: bool = True,
 ) -> torch.Tensor:
     """
     Applies the Sinkhorn algorithm to compute optimal transport between two sets of points.
@@ -26,8 +31,11 @@ def sinkhorn(
         torch.Tensor: Optimal transport matrix. Shape: (n_query, n_doc, n_rank + 1)
     """
     n_query, n_doc, _ = C.shape
-    K = torch.exp(-C / eps)  # (n_query, n_doc, n_rank + 1)
-    u = torch.ones(n_query, n_doc, 1, device=C.device)  # (n_query, n_doc, 1)
+    if apply_kernel:
+        K = torch.exp(-C / eps)  # (n_query, n_doc, n_rank + 1)
+    else:
+        K = C
+    u = torch.ones(n_query, n_doc, 1, device=C.device, dtype=C.dtype)  # (n_query, n_doc, 1)
 
     # sinkhorn iteration
     for _ in range(n_iter):
@@ -71,9 +79,7 @@ class History:
 
     Attributes:
         pi_stock_size (int): The maximum number of pi values to store.
-        loss (list[float]): List of loss values.
-        grad_norm (list[float]): List of gradient norm values.
-        pi (list[NDArray[np.float_]]): List of pi values.
+        grad_stock_size (int): The maximum number of gradient values to store.
 
     Methods:
         is_within_pi_stock_size: Check if the number of stored pi values is within the limit.
@@ -85,10 +91,14 @@ class History:
 
     """
 
-    pi_stock_size: int
-    loss: list[float] = field(default_factory=list)
-    grad_norm: list[float] = field(default_factory=list)
-    pi: list[NDArray[np.float_]] = field(default_factory=list)
+    pi_stock_size: int = 0
+    grad_stock_size: int = 0
+
+    def __post_init__(self) -> None:
+        self.loss: list[tuple[int, float]] = []
+        self.grad_norm: list[tuple[int, float]] = []
+        self.pi: list[tuple[int, NDArray[np.float_]]] = []
+        self.grad: list[tuple[int, NDArray[np.float_]]] = []
 
     @property
     def is_within_pi_stock_size(self) -> bool:
@@ -101,33 +111,30 @@ class History:
         """
         return len(self.pi) < self.pi_stock_size
 
-    def append(self, loss: float, grad_norm: float) -> None:
+    @property
+    def is_within_grad_stock_size(self) -> bool:
         """
-        Append a loss and gradient norm value to the history.
-
-        Args:
-            loss (float): The loss value to append.
-            grad_norm (float): The gradient norm value to append.
+        Check if the number of stored gradient values is within the limit.
 
         Returns:
-            None
+            bool: True if the number of stored gradient values is within the limit, False otherwise.
 
         """
-        self.loss.append(loss)
-        self.grad_norm.append(grad_norm)
+        return len(self.grad) < self.grad_stock_size
 
-    def append_pi(self, pi: NDArray[np.float_]) -> None:
-        """
-        Append a pi value to the history.
+    def append_loss(self, iter: int, loss: float) -> None:
+        self.loss.append((iter, loss))
 
-        Args:
-            pi (NDArray[np.float_]): The pi value to append.
+    def append_grad_norm(self, iter: int, grad_norm: float) -> None:
+        self.grad_norm.append((iter, grad_norm))
 
-        Returns:
-            None
+    def append_pi_if_not_full(self, iter: int, pi: NDArray[np.float_]) -> None:
+        if self.is_within_pi_stock_size:
+            self.pi.append((iter, pi))
 
-        """
-        self.pi.append(pi)
+    def append_grad_if_not_full(self, iter: int, grad: NDArray[np.float_]) -> None:
+        if self.is_within_grad_stock_size:
+            self.grad.append((iter, grad))
 
     def plot_loss_curve(self) -> None:
         """
@@ -138,7 +145,8 @@ class History:
 
         """
         plt.figure()
-        plt.plot(self.loss)
+        iters, loss = zip(*self.loss)
+        plt.plot(iters, loss)
         plt.xlabel("Iteration")
         plt.ylabel("Loss")
 
@@ -151,7 +159,8 @@ class History:
 
         """
         plt.figure()
-        plt.plot(self.grad_norm)
+        iters, grad_norm = zip(*self.grad_norm)
+        plt.plot(iters, grad_norm)
         plt.xlabel("Iteration")
         plt.ylabel("Grad norm")
 
@@ -168,13 +177,14 @@ class History:
 
         """
         n_row = len(self.pi) // n_col
-        if len(self.pi) % n_col != 0:
+        if (len(self.pi) % n_col != 0) or (n_row == 0):
             n_row += 1
         fig, axes = plt.subplots(n_row, n_col, figsize=(5 * n_col, 5 * n_row))
         axes: list[Axes] = np.ravel(axes).tolist()
-        for i in range(len(self.pi)):
+        for i, (iter, pi) in enumerate(self.pi):
             ax = axes[i]
-            pi = self.pi[i] if plot_dummy else self.pi[i][:, :-1]
+            if not plot_dummy:
+                pi = pi[:, :-1]
             sns.heatmap(
                 pi,
                 annot=False,
@@ -185,11 +195,43 @@ class History:
                 vmax=1,
                 cbar=True if i == 0 else False,
             )
-            ax.set_title(f"イテレーション {i}")
+            ax.set_title(f"表示確率: イテレーション {iter}")
             ax.set_xlabel("表示位置")
             ax.set_ylabel("アイテム")
             if plot_dummy:
                 # xメモリの一番最後をdummyに変更
-                ax.set_xticklabels([f"{i}" for i in range(self.pi[i].shape[1] - 1)] + ["dummy"])
+                ax.set_xticklabels([f"{i}" for i in range(pi.shape[1] - 1)] + ["dummy"])
+
+        fig.tight_layout()
+
+    def plot_grad_by_iteration(self, n_col: int = 5) -> None:
+        """
+        Plot the gradient values by iteration.
+
+        Args:
+            n_col (int): The number of columns in the subplot grid. Default is 5.
+
+        Returns:
+            None
+
+        """
+        n_row = len(self.grad) // n_col
+        if (len(self.grad) % n_col != 0) or (n_row == 0):
+            n_row += 1
+        fig, axes = plt.subplots(n_row, n_col, figsize=(5 * n_col, 5 * n_row))
+        axes: list[Axes] = np.ravel(axes).tolist()
+        for i, (iter, grad) in enumerate(self.grad):
+            ax = axes[i]
+            sns.heatmap(
+                grad[:, :-1],
+                annot=False,
+                fmt=".1f",
+                cmap="Blues",
+                ax=ax,
+                cbar=True,
+            )
+            ax.set_title(f"勾配: イテレーション {iter}")
+            ax.set_xlabel("表示位置")
+            ax.set_ylabel("アイテム")
 
         fig.tight_layout()
