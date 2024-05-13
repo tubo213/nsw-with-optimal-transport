@@ -27,7 +27,8 @@ def compute_pi_ot_nsw(
     tol: float = 1e-6,
     device: str = "cpu",
     use_amp: Optional[bool] = None,
-    pi_stock_size: int = 10,
+    pi_stock_size: int = 0,
+    grad_stock_size: int = 0,
 ) -> tuple[NDArray[np.float_], History]:
     """_description_
 
@@ -40,6 +41,8 @@ def compute_pi_ot_nsw(
         ot_n_iter (int, optional): number of iteration for ot. Defaults to 30.
         tol (float, optional): tolerance. Defaults to 1e-6.
         device (str, optional): device. Defaults to "cpu".
+        pi_stock_size (int, optional): pi stock size. Defaults to 0.
+        grad_stock_size (int, optional): grad stock size. Defaults to 0.
 
     Returns:
         NDArray[np.float_]: _description_
@@ -65,8 +68,9 @@ def compute_pi_ot_nsw(
     if use_amp is None:
         use_amp = True if device == "cuda" else False
     scaler = GradScaler(enabled=use_amp)
-    history = History(pi_stock_size=pi_stock_size)
-    for _ in tqdm(range(max_iter), leave=False):
+    history: History = History(pi_stock_size=pi_stock_size, grad_stock_size=grad_stock_size)
+    history.append_pi_if_not_full(iter=-1, pi=C.data[0].clone().detach().cpu().numpy())
+    for iter_ in tqdm(range(max_iter), leave=False):
         optimier.zero_grad()
         with autocast(enabled=use_amp):
             # compute X
@@ -76,14 +80,16 @@ def compute_pi_ot_nsw(
         scaler.step(optimier)
         scaler.update()
 
-        # gradient normが一定以下になったら終了
         grad_norm = torch.norm(C.grad)
+        # 勾配を記録
+        history.append_grad_if_not_full(iter=iter_, grad=-C.grad[0].clone().detach().cpu().numpy())  # type: ignore
+        # gradient normが一定以下になったら終了
         if grad_norm < tol:
             break
 
-        history.append(loss.item(), grad_norm.item())
-        if history.is_within_pi_stock_size:
-            history.append_pi(X.data[0].clone().detach().cpu().numpy())
+        history.append_loss(iter=iter_, loss=loss.item())
+        history.append_grad_norm(iter=iter_, grad_norm=grad_norm.item())
+        history.append_pi_if_not_full(iter=iter_, pi=X[0].clone().detach().cpu().numpy())
 
     pi: NDArray[np.float_] = X[:, :, :-1].detach().cpu().numpy()
 
@@ -127,6 +133,7 @@ class OTNSWOptimizer(BaseOptimizer):
             device=self.device,
             use_amp=self.use_amp,
             pi_stock_size=0,
+            grad_stock_size=0,
         )
         return pi
 
@@ -172,6 +179,7 @@ class ClusteredOTNSWOptimizer(BaseClusteredOptimizer):
             device=self.device,
             use_amp=self.use_amp,
             pi_stock_size=0,
+            grad_stock_size=0,
         )
         return pi
 
