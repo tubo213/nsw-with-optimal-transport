@@ -75,8 +75,8 @@ Note that we rename the files as follows:
 from src import create_generator
 
 g = create_generator(generator_name='synthetic', n_query=100, n_doc=1000)
-rel_mat_true, rel_mat_obs = g.exam_func(K=10) # relevance matrix
-expo = g.exam_func() # exposure
+rel_mat_true, rel_mat_obs = g.generate_rel_mat() # relevance matrix
+expo = g.exam_func(K=10) # exposure
 ```
 
 ### Optimize
