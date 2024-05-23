@@ -68,6 +68,35 @@ Note that we rename the files as follows:
 - Delicious_data.txt in Delicious.zip to delicious.txt
 - train.txt in Wiki10.bow.zip to wiki.txt , respectively.
 
+## Basic Usage
+
+### Generate Data
+```python
+from src import create_generator
+
+g = create_generator(generator_name='synthetic', n_query=100, n_doc=1000)
+rel_mat_true, rel_mat_obs = g.exam_func(K=10) # relevance matrix
+expo = g.exam_func() # exposure
+```
+
+### Optimize
+```python
+from src import create_optimizer, evaluate_pi
+
+optimizer = create_optimizer(optimizer_name='ot_nsw')
+pi = optimizer.solve(rel_mat_obs, expo)
+
+print(evaluate_pi(pi, rel_mat_true, expo))
+```
+
+### List of available optimizers and generators
+```python
+from src import list_optimizers, list_generators
+
+print(list_optimizers())
+print(list_generators())
+```
+
 
 ## Run Experiment
 
@@ -80,6 +109,12 @@ The following commands perform experiments with optimizer=nsw, number of documen
 
 ```bash
 rye run python main.py -m optimizer=nsw generator.n_doc=100,200,300,400
+```
+
+### Reproduce the results of the paper
+
+```bash
+make run-all
 ```
 
 ## Export experiment results
