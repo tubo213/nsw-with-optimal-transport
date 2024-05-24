@@ -98,7 +98,7 @@ print(list_generators())
 ```
 
 
-## Run Experiment
+### Run Experiment
 
 Before running an experiment, you need register wandb.
 please see [wandb documentation](https://docs.wandb.ai/ja/quickstart) for details.
@@ -111,7 +111,7 @@ The following commands perform experiments with optimizer=nsw, number of documen
 rye run python main.py -m optimizer=nsw generator.n_doc=100,200,300,400
 ```
 
-### Reproduce the results of the paper
+## Reproduce the results of the paper
 
 ```bash
 make run-all
