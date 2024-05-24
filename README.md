@@ -70,26 +70,34 @@ Note that we rename the files as follows:
 
 ## Basic Usage
 
-### Generate Data
 ```python
-from src import create_generator
+from src import create_generator, create_optimizer, evaluate_pi
 
-g = create_generator(generator_name='synthetic', n_query=100, n_doc=1000)
-rel_mat_true, rel_mat_obs = g.generate_rel_mat() # relevance matrix
-expo = g.exam_func(K=10) # exposure
-```
+g = create_generator(
+    generator_name="synthetic",
+    # specific generator parameters
+    n_query=250,
+    n_doc=1600,
+    lam=1.0,
+)
+rel_mat_true, rel_mat_obs = g.generate_rel_mat()  # relevance matrix
+expo = g.exam_func(K=10, shape="inv")  # exposure
 
-### Optimize
-```python
-from src import create_optimizer, evaluate_pi
-
-optimizer = create_optimizer(optimizer_name='ot_nsw')
+optimizer = create_optimizer(
+    optimizer_name="ot_nsw",
+    # specific optimizer parameters
+    eps=1,
+    lr=0.5,
+    use_amp=False,
+    tol=0.01,
+    device="cuda",
+)
 pi = optimizer.solve(rel_mat_obs, expo)
 
 print(evaluate_pi(pi, rel_mat_true, expo))
 ```
 
-### List of available optimizers and generators
+## List available optimizers and generators
 ```python
 from src import list_optimizers, list_generators
 
@@ -98,7 +106,7 @@ print(list_generators())
 ```
 
 
-### Run Experiment
+## Run Experiment
 
 Before running an experiment, you need register wandb.
 please see [wandb documentation](https://docs.wandb.ai/ja/quickstart) for details.
@@ -111,7 +119,7 @@ The following commands perform experiments with optimizer=nsw, number of documen
 rye run python main.py -m optimizer=nsw generator.n_doc=100,200,300,400
 ```
 
-## Reproduce the results of the paper
+### Reproduce the results of the paper
 
 ```bash
 make run-all
