@@ -34,7 +34,10 @@ First, Please match the index url to the environment at hand to use torch.
 
 ```toml
 # pyproject.toml
-"torch == 2.3.0+cu121" # change this to match your environment
+dependencies = [
+    ...,
+    "torch == 2.3.0+cu121", # change this to match your environment
+]
 
 [[tool.rye.sources]]
 name = "torch"
