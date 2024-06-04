@@ -1,4 +1,16 @@
-# NSW with Optimal Transport
+# Fast solution to the fair ranking problem using the Sinkhorn algorithm
+
+This repository contains the code used for the experiments in "Fast solution to the fair ranking problem using the Sinkhorn algorithm" (PRICAI 2024)
+
+Note: This paper is under review.
+
+## Abstract
+In two-sided marketplaces such as online flea markets, recommender systems for providing consumers with personalized item rankings play a key role in promoting transactions between providers and consumers. 
+Meanwhile, two-sided marketplaces face the problem of balancing consumer satisfaction and fairness among items to stimulate activity of item providers.
+Saito and Joachims (2022) devised an impact-based fair ranking method for maximizing the Nash social welfare based on fair division; however, this method, which requires solving a large-scale constrained nonlinear optimization problem, is very difficult to apply to practical-scale recommender systems.
+We thus propose a fast solution to the impact-based fair ranking problem. 
+We first transform the fair ranking problem into an unconstrained optimization problem and then design a gradient ascent method that repeatedly executes the Sinkhorn algorithm. 
+Experimental results demonstrate that our algorithm provides fair rankings of high quality and is about 1000 times faster than application of commercial optimization software.
 
 ## Build Environment
 
