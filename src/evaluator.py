@@ -1,5 +1,7 @@
 import numpy as np
+import torch
 from numpy.typing import NDArray
+from tqdm import tqdm
 
 __all__ = ["evaluate_pi"]
 
@@ -47,13 +49,17 @@ def evaluate_pi(
     item_utils_unif = compute_item_utils_unif(rel_mat, v)
     nsw: float = np.power(item_utils.prod(), 1 / n_doc)
 
-    # mean max envy
-    max_envies = np.zeros(n_doc)
-    for i in range(n_doc):
-        u_d_swap = (expo_mat * rel_mat[:, [i] * n_doc]).sum(0)
+    # torchでmean max envyを計算
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    expo_mat_tensor = torch.tensor(expo_mat).to(device)
+    rel_mat_tensor = torch.tensor(rel_mat).to(device)
+    n_query_tensor = torch.tensor(n_query).to(device)
+    max_envies_tensor = torch.zeros(n_doc).to(device)
+    for i in tqdm(range(n_doc), desc="Computing mean max envy", leave=False):
+        u_d_swap = (expo_mat_tensor * rel_mat_tensor[:, [i] * n_doc]).sum(0)
         d_envies = u_d_swap - u_d_swap[i]
-        max_envies[i] = d_envies.max() / n_query
-    mean_max_envy = max_envies.mean()
+        max_envies_tensor[i] = d_envies.max() / n_query_tensor
+    mean_max_envy = max_envies_tensor.mean().item()
 
     # pct item util better off
     pct_item_util_better = 100 * ((item_utils / item_utils_unif) > 1.10).mean()
