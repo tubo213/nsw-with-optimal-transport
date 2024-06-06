@@ -2,10 +2,11 @@ name: clustered_ot_nsw
 params:
   n_doc_cluster: ${generator.K}
   n_query_cluster: null
-  method: ot
   alpha: 0.0
-  lr: 0.01
-  ot_n_iter: 30
-  last_ot_n_iter: 50
-  tol: 0.001
+  eps: 1.0
+  max_iter: 100
+  lr: 0.5
+  ot_n_iter: 20
+  tol: 0.01
   device: cuda
+  use_amp: False
