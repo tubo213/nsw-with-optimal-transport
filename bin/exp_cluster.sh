@@ -16,7 +16,7 @@ do
 
     echo "Running experiment with n_query_cluster=$n_query_cluster, n_doc_cluster=$n_doc_cluster"    
     rye run python main.py -m \
-        exp_name=exp_cluster \
+        exp_name=exp_cluster_2 \
         generator=base_size_cluster \
         optimizer=clustered_ot_nsw \
         optimizer.params.n_doc_cluster=$n_doc_cluster \
