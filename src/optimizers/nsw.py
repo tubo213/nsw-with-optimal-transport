@@ -42,7 +42,8 @@ def compute_nsw(
     obj = 0.0
     constraints = []
     for d in np.arange(n_doc):
-        obj += am_rel[d] * cvx.log(rel_mat[:, d] @ pi[:, K * d : K * (d + 1)] @ expo)  # type: ignore
+        imp = rel_mat[:, d] @ pi[:, K * d : K * (d + 1)] @ expo / high[d]
+        obj += am_rel[d] * cvx.log(imp) * high[d]  # type: ignore
         # feasible allocation
         basis_ = np.zeros((n_doc * K, 1))
         basis_[K * d : K * (d + 1)] = 1

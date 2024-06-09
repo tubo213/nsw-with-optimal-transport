@@ -51,11 +51,12 @@ def compute_pi_ot_nsw(
     n_rank = expo.shape[0]
     rel_mat: torch.Tensor = torch.FloatTensor(rel_mat).to(device)  # (n_query, n_doc)
     expo: torch.Tensor = torch.FloatTensor(expo).to(device)  # (K, 1)
+    high: torch.Tensor = torch.FloatTensor(high).to(device)  # (n_doc, )
     am_rel = rel_mat.sum(0) ** alpha  # (n_doc, ), merit for each documnet, alpha nswに利用
     click_prob = rel_mat[:, :, None] * expo.reshape(1, 1, n_rank)  # (n_query, n_doc, K)
 
     # アイテムからの供給量
-    a: torch.Tensor = torch.FloatTensor(high).view(1, -1, 1).to(device)
+    a: torch.Tensor = high.view(1, -1, 1).to(device)
     # ダミー列への輸送量はアイテム数 - 表示数
     dummy_demand = a.sum(dim=1) - n_rank  # (n_query, 1)
     b = torch.ones(n_query, n_rank + 1, 1, device=device)
@@ -75,7 +76,7 @@ def compute_pi_ot_nsw(
         with autocast(enabled=use_amp):
             # compute X
             X: torch.Tensor = sinkhorn(C, a, b, n_iter=ot_n_iter, eps=eps)
-            loss = compute_nsw_loss(X[:, :, :-1], click_prob, am_rel)
+            loss = compute_nsw_loss(X[:, :, :-1], click_prob, am_rel, high)
         scaler.scale(loss).backward()
         scaler.step(optimier)
         scaler.update()

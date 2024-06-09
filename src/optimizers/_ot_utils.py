@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Optional
 
 import japanize_matplotlib  # noqa: F401
 import matplotlib.pyplot as plt
@@ -53,6 +54,7 @@ def compute_nsw_loss(
     pi: torch.Tensor,
     click_prob: torch.Tensor,
     am_rel: torch.Tensor,
+    high: Optional[torch.Tensor] = None,
     eps: float = 0,
 ) -> torch.Tensor:
     """
@@ -62,14 +64,18 @@ def compute_nsw_loss(
         pi (torch.Tensor): Probability matrix of shape (n_query, n_doc, n_rank).
         click_prob (torch.Tensor): Click probability matrix of shape (n_query, n_doc, n_rank).
         am_rel (torch.Tensor): Relevance matrix of shape (n_doc).
+        high (torch.Tensor): High matrix of shape (n_doc).
         eps (float, optional): Small value added to the denominator to avoid division by zero. Defaults to 0.
 
     Returns:
         torch.Tensor: The computed NSW loss.
 
     """
-    imp = (pi * click_prob).sum(dim=[0, 2])
-    return -(am_rel * torch.log(imp + eps)).sum()
+    if high is None:
+        high = torch.ones_like(am_rel, device=pi.device)
+    imp = (pi * click_prob).sum(dim=[0, 2]) / high
+    imp_l = torch.log(imp + eps) * high
+    return -(am_rel * imp_l).sum()
 
 
 @dataclass
