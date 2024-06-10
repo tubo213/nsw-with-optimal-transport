@@ -5,7 +5,6 @@ declare -a datasizes=(
     "6250 1250"
     "12500 2500"
     "25000 5000"
-    "50000 10000"
 )
 
 declare -a rates=(0.1 0.4 0.6)
@@ -26,7 +25,7 @@ do
 
         echo "Running experiment with n_query=$n_query, n_doc=$n_doc, n_query_cluster=$n_query_cluster, n_doc_cluster=$n_doc_cluster, rate=$r" 
         rye run python main.py -m \
-            exp_name=exp_cluster_datasize \
+            exp_name=exp_cluster_datasize_2 \
             generator=base_size_cluster \
             generator.params.n_query=$n_query \
             generator.params.n_doc=$n_doc \
