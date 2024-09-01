@@ -1,8 +1,8 @@
-PREV_OPTIMIZERS="optimizer=greedy,greedy_nsw,expo_fair,nsw"
+PREV_OPTIMIZERS="optimizer=greedy_nsw"
 PROPOSED_OPTIMIZERS="optimizer=ot_nsw,pgd_nsw"
 SEEDS="seed=0,1,2,3,4"
 
-for optimizer in $PREV_OPTIMIZERS $PROPOSED_OPTIMIZERS
+for optimizer in $PREV_OPTIMIZERS
 do
-rye run python main.py -m exp_name=exp_base $optimizer $SEEDS generator=base_size
+rye run python main.py -m exp_name=exp_base $optimizer $SEEDS generator=base_size optimizer.params.device=cpu,cuda
 done
