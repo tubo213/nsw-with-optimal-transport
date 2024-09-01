@@ -64,6 +64,9 @@ def compute_greedy_nsw(
 
 
 class GreedyNSWOptimizer(BaseOptimizer):
+    def __init__(self, device: str = "cpu"):
+        self.device = device
+
     def solve(self, rel_mat: NDArray[np.float_], expo: NDArray[np.float_]) -> NDArray[np.float_]:
         return compute_greedy_nsw(rel_mat, expo)
 
