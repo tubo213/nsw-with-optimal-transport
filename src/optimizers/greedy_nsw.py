@@ -1,6 +1,7 @@
 from typing import Any
 
 import numpy as np
+import torch
 from numpy.typing import NDArray
 
 from ._registry import register_optimizer
@@ -14,17 +15,22 @@ def choice_maximize_nsw_doc(
     impact_qk: NDArray[np.float_],  # (n_doc)
     used_docs: NDArray[np.float_],  # (n_doc)
     eps: float = 1e-5,
-) -> np.intp:
+    device: str = "cpu",
+) -> int:
+    # torchに変更
+    impact_on_items = torch.tensor(impact_on_items, device=device)
+    impact_qk = torch.tensor(impact_qk, device=device)
+    used_docs = torch.tensor(used_docs, device=device, dtype=torch.bool)
+
     # 既に選択されたdocの影響は0
     impact_qk = impact_qk * ~used_docs  # (n_doc)
 
-    # 各docを選択した場合の影響を計算
-    impact_qk_diag = np.diag(impact_qk)  # (n_doc, n_doc)
-    this_impact_on_items = impact_on_items[:, None] + impact_qk_diag  # (n_doc, n_doc)
+    # 各docを追加した場合の影響度の増分を計算
+    next_impact_on_items = impact_on_items + impact_qk  # (n_doc)
+    uplift = np.log(next_impact_on_items + eps) - np.log(impact_on_items + eps)  # (n_doc)
 
     # nswの目的関数値が一番大きくなるdocを選択
-    ln_nsw = np.log(this_impact_on_items + eps).sum(0)  # (n_doc)
-    best_doc = np.argmax(ln_nsw)
+    best_doc: int = uplift.argmax().item()
 
     return best_doc
 
