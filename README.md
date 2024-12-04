@@ -2,7 +2,6 @@
 
 This repository contains the code used for the experiments in "Fast solution to the fair ranking problem using the Sinkhorn algorithm" (PRICAI 2024)
 
-Note: This paper is under review.
 
 ## Abstract
 In two-sided marketplaces such as online flea markets, recommender systems for providing consumers with personalized item rankings play a key role in promoting transactions between providers and consumers. 
